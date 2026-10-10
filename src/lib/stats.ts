@@ -59,7 +59,7 @@ export function summarize(data: AppData, from: string, to: string): Summary {
   let incomeCount = 0
   let expenseCount = 0
   const days = new Map<string, { date: string; label: string; income: number; expense: number; cum: number }>()
-  for (let d = from, n = 0; d <= to && n < 62; d = addDays(d, 1), n++) {
+  for (let d = from, n = 0; d <= to && n < 400; d = addDays(d, 1), n++) {
     days.set(d, { date: d, label: from.slice(0, 7) === to.slice(0, 7) ? String(Number(d.slice(8))) : weekdaysShort()[weekdayIndex(d)], income: 0, expense: 0, cum: 0 })
   }
 
@@ -257,7 +257,7 @@ export function monthForecast(data: AppData, anchor: string, today: string): For
 
 const parseDay = (iso: string) => new Date(iso + 'T00:00').getTime()
 
-export type RangeKey = '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'
+export type RangeKey = '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL' | 'CUSTOM'
 export const RANGES: { key: RangeKey; label: string; days: number | null }[] = [
   { key: '1W', get label() { return tr('1Ε') }, days: 7 },
   { key: '1M', get label() { return tr('1Μ') }, days: 30 },
@@ -265,13 +265,15 @@ export const RANGES: { key: RangeKey; label: string; days: number | null }[] = [
   { key: '6M', get label() { return tr('6Μ') }, days: 182 },
   { key: '1Y', get label() { return tr('1Χ') }, days: 365 },
   { key: 'ALL', get label() { return tr('Όλα') }, days: null },
+  { key: 'CUSTOM', get label() { return tr('Διάστημα') }, days: null },
 ]
 
 export interface Overall {
   hasData: boolean
   series: { date: string; balance: number }[]
   startBalance: number
-  total: number // cumulative net up to today
+  total: number // balance at the end of the shown range
+  totalToday: number // balance as of today (all history)
   income: number // within range
   expense: number
   bestDay?: { date: string; net: number }
@@ -283,9 +285,9 @@ export interface Overall {
 }
 
 /** Stock-style view: cumulative balance (all income minus all expenses) over time. */
-export function overall(data: AppData, days: number | null, today: string): Overall {
+export function overall(data: AppData, days: number | null, today: string, custom?: { from: string; to: string }): Overall {
   const txs = data.transactions.filter((t) => t.date <= today)
-  if (txs.length === 0) return { hasData: false, series: [], startBalance: 0, total: 0, income: 0, expense: 0, avgPerActiveDay: 0, runwayDays: null, months: [] }
+  if (txs.length === 0) return { hasData: false, series: [], startBalance: 0, total: 0, totalToday: 0, income: 0, expense: 0, avgPerActiveDay: 0, runwayDays: null, months: [] }
 
   const net = new Map<string, number>()
   const monthMap = new Map<string, { income: number; expense: number }>()
@@ -301,7 +303,10 @@ export function overall(data: AppData, days: number | null, today: string): Over
     monthMap.set(mk, m)
   }
 
-  const start = days === null || addDays(today, -(days - 1)) < first ? first : addDays(today, -(days - 1))
+  const start = custom ? custom.from : days === null || addDays(today, -(days - 1)) < first ? first : addDays(today, -(days - 1))
+  const end = custom ? (custom.to < today ? custom.to : today) : today
+  let allBal = data.settings.openingBalance || 0
+  for (const v of net.values()) allBal += v
   let startBalance = data.settings.openingBalance || 0
   for (const [d, v] of net) if (d < start) startBalance += v
 
@@ -310,14 +315,14 @@ export function overall(data: AppData, days: number | null, today: string): Over
   let income = 0
   let expense = 0
   const dayNets: { date: string; net: number }[] = []
-  for (let d = start; d <= today; d = addDays(d, 1)) {
+  for (let d = start; d <= (end < start ? start : end); d = addDays(d, 1)) {
     const v = net.get(d) ?? 0
     bal += v
     series.push({ date: d, balance: Math.round(bal * 100) / 100 })
     if (net.has(d)) dayNets.push({ date: d, net: v })
   }
   for (const t of txs) {
-    if (t.date < start) continue
+    if (t.date < start || t.date > end) continue
     if (t.type === 'income') income += t.amount
     else expense += t.amount
   }
@@ -326,7 +331,7 @@ export function overall(data: AppData, days: number | null, today: string): Over
   const recentDays = Math.max(7, Math.round((parseDay(today) - parseDay(since)) / 86400000) + 1)
   const recentExpense = txs.filter((t) => t.type === 'expense' && t.date >= since).reduce((a, t) => a + t.amount, 0)
   const dailySpend = recentExpense / recentDays
-  const runwayDays = bal > 0 && dailySpend > 0 ? Math.floor(bal / dailySpend) : null
+  const runwayDays = allBal > 0 && dailySpend > 0 ? Math.floor(allBal / dailySpend) : null
 
   const sorted = [...dayNets].sort((a, b) => b.net - a.net)
   const months = [...monthMap.entries()]
@@ -345,6 +350,7 @@ export function overall(data: AppData, days: number | null, today: string): Over
     series,
     startBalance,
     total: bal,
+    totalToday: allBal,
     income,
     expense,
     bestDay: sorted[0],
@@ -380,8 +386,8 @@ export function budgetStatus(data: AppData, anchor: string, today: string): { mo
 export interface Anomaly { category: string; amount: number; typical: number; ratio: number }
 
 /** Categories where this period's spending is well above the average of the 3 previous periods (pace-adjusted). */
-export function anomalies(data: AppData, period: 'day' | 'week' | 'fortnight' | 'month', from: string, to: string, today: string): Anomaly[] {
-  if (period === 'day') return []
+export function anomalies(data: AppData, period: 'day' | 'week' | 'fortnight' | 'month' | 'custom', from: string, to: string, today: string): Anomaly[] {
+  if (period === 'day' || period === 'custom') return []
   const cur = summarize(data, from, to).byCategory
   const prevs: { from: string; to: string }[] = []
   let cursor = from

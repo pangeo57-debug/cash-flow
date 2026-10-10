@@ -405,5 +405,10 @@ const dict: Record<string, string> = {
   'Αγίου Δημητρίου (τοπική)': 'San Demetrio (locale)',
   'Αγίου Τίτου (τοπική)': 'San Tito (locale)',
   'Αγίου Αχιλλίου (τοπική)': 'Sant\'Achille (locale)',
+  'Από': 'Dal',
+  'Έως': 'Al',
+  'Δευ–Κυρ': 'Lun–Dom',
+  '7 ημέρες από σήμερα': 'Prossimi 7 giorni',
+  'Διάστημα': 'Periodo',
 }
 export default dict

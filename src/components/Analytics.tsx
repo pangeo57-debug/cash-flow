@@ -6,6 +6,7 @@ import { periodLabels, addDays, formatShort, money, parseISO, periodRange, type 
 import { anomalies, budgetStatus, buildInsights, monthForecast, summarize } from '../lib/stats'
 import { todayISO } from '../lib/dates'
 import { catLabel, findCategory } from '../constants'
+import { RangePicker } from './RangePicker'
 import { locale, tr, useLang } from '../i18n'
 
 export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppData; anchor: string; isLight: boolean }) {
@@ -19,11 +20,15 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
   const [period, setPeriod] = useState<Period>('week')
   const [anchor, setAnchor] = useState(initialAnchor)
   const [cat, setCat] = useState<string | null>(null)
-  const { from, to } = periodRange(period, anchor)
-  const prevRange = periodRange(period, addDays(from, -1))
+  const [custom, setCustom] = useState(() => periodRange('month', initialAnchor))
+  const { from, to } = period === 'custom' ? custom : periodRange(period, anchor)
+  const spanDays = daysBetween(from, to)
+  const prevRange = period === 'custom' ? { from: addDays(from, -spanDays), to: addDays(from, -1) } : periodRange(period, addDays(from, -1))
   const s = useMemo(() => summarize(data, from, to), [data, from, to, lang])
   const prev = useMemo(() => summarize(data, prevRange.from, prevRange.to), [data, prevRange.from, prevRange.to, lang])
-  const forecast = useMemo(() => monthForecast(data, anchor, todayISO()), [data, anchor])
+  // goal/forecast/limits describe a calendar month: for a custom interval, the month it ends in
+  const monthAnchor = period === 'custom' ? to : anchor
+  const forecast = useMemo(() => monthForecast(data, monthAnchor, todayISO()), [data, monthAnchor])
   const today = todayISO()
   // how the per-day average is divided is the user's choice
   const [avgMode, setAvgModeState] = useState<AvgMode>(() => {
@@ -57,7 +62,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
   const prevAvgExp = prevDays ? prev.expense / prevDays : 0
   const prevAvgInc = prevDays ? prev.income / prevDays : 0
   const noSpendDays = s.byDay.filter((d) => d.date <= today && d.expense === 0).length
-  const budget = useMemo(() => budgetStatus(data, anchor, today), [data, anchor, today])
+  const budget = useMemo(() => budgetStatus(data, monthAnchor, today), [data, monthAnchor, today])
   const unusual = useMemo(() => anomalies(data, period, from, to, today), [data, period, from, to, today])
   const insights = useMemo(() => buildInsights(s), [s, lang])
   const catTx = useMemo(
@@ -67,29 +72,33 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
   const move = (dir: 1 | -1) => {
     setCat(null)
-    setAnchor(dir === 1 ? addDays(to, 1) : addDays(from, -1))
+    if (period === 'custom') setCustom({ from: addDays(from, dir * spanDays), to: addDays(to, dir * spanDays) })
+    else setAnchor(dir === 1 ? addDays(to, 1) : addDays(from, -1))
   }
   const changePeriod = (p: Period) => {
     setCat(null)
+    if (p === 'custom' && period !== 'custom') setCustom({ from, to }) // start from what is on screen
     setPeriod(p)
   }
   const label = from === to ? formatShort(from) : `${formatShort(from)} – ${formatShort(to)}`
   const showDaily = from !== to
-  const showWeekday = period === 'fortnight' || period === 'month'
+  const showWeekday = period === 'fortnight' || period === 'month' || (period === 'custom' && spanDays >= 14)
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-4 gap-1 rounded-2xl bg-slate-800 p-1">
+      <div className="grid grid-cols-5 gap-1 rounded-2xl bg-slate-800 p-1">
         {(Object.keys(periodLabels()) as Period[]).map((p) => (
-          <button key={p} onClick={() => changePeriod(p)} className={`rounded-xl py-2 text-xs font-medium transition ${p === period ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>
+          <button key={p} onClick={() => changePeriod(p)} className={`rounded-xl px-1 py-2 text-[11px] font-medium transition ${p === period ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>
             {periodLabels()[p]}
           </button>
         ))}
       </div>
 
+      {period === 'custom' && <RangePicker from={from} to={to} onChange={(f, t) => { setCat(null); setCustom({ from: f, to: t }) }} />}
+
       <div className="flex items-center justify-between">
         <button onClick={() => move(-1)} aria-label={tr('Προηγούμενη')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronLeft size={18} /></button>
-        <button onClick={() => { setCat(null); setAnchor(initialAnchor) }} className="text-sm font-medium text-slate-200">{label} <span className="text-slate-500">{parseISO(from).getFullYear()}</span></button>
+        <button onClick={() => { setCat(null); if (period === 'custom') setCustom(periodRange('month', initialAnchor)); else setAnchor(initialAnchor) }} className="text-sm font-medium text-slate-200">{label} <span className="text-slate-500">{parseISO(from).getFullYear()}</span></button>
         <button onClick={() => move(1)} aria-label={tr('Επόμενη')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronRight size={18} /></button>
       </div>
 

@@ -41,13 +41,12 @@ export default function App() {
   const [txSheet, setTxSheet] = useState<TxType | null>(null)
   const [lessonSheet, setLessonSheet] = useState<{ lesson?: Lesson } | null>(null)
 
-  const [weekAnchor, setWeekAnchor] = useState(todayISO())
+  const [week, setWeek] = useState(() => periodRange('week', todayISO()))
   const [editTx, setEditTx] = useState<Transaction | null>(null)
   const [recSheet, setRecSheet] = useState<{ item?: RecurringTx } | null>(null)
   const [slotSheet, setSlotSheet] = useState<{ slot?: WeeklySlot } | null>(null)
 
   // Generate lessons from the weekly programme for what's on screen
-  const week = periodRange('week', weekAnchor)
   useEffect(() => {
     if (!ready) return
     ensureRange(date, date)
@@ -190,8 +189,9 @@ export default function App() {
           </div>
         ) : tab === 'week' ? (
           <Week
-            anchor={weekAnchor}
-            setAnchor={setWeekAnchor}
+            from={week.from}
+            to={week.to}
+            setRange={(from, to) => setWeek({ from, to })}
             lessons={data.lessons}
             slots={data.weeklySlots}
             onOpenDay={(d) => { setDate(d); setTab('today') }}
@@ -268,7 +268,7 @@ export default function App() {
       {slotSheet && (
         <SlotSheet
           slot={slotSheet.slot}
-          weekday={(new Date(weekAnchor + 'T00:00').getDay() + 6) % 7}
+          weekday={(new Date(week.from + 'T00:00').getDay() + 6) % 7}
           defaultFee={lastFee}
           onClose={() => setSlotSheet(null)}
           onSave={(v) => { saveSlot(v); setSlotSheet(null) }}

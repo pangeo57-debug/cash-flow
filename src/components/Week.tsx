@@ -1,11 +1,13 @@
 import { Check, ChevronLeft, ChevronRight, Pencil, Plus, Repeat } from 'lucide-react'
 import type { Lesson, WeeklySlot } from '../types'
-import { weekdaysShort, addDays, formatShort, money, periodRange, todayISO } from '../lib/dates'
+import { weekdaysShort, weekdayIndex, addDays, formatShort, money, periodRange, todayISO } from '../lib/dates'
 import { tr } from '../i18n'
+import { RangePicker } from './RangePicker'
 
 interface Props {
-  anchor: string
-  setAnchor: (d: string) => void
+  from: string
+  to: string
+  setRange: (from: string, to: string) => void
   lessons: Lesson[]
   slots: WeeklySlot[]
   onOpenDay: (date: string) => void
@@ -18,10 +20,13 @@ interface Props {
 
 const dayTotal = (ls: Lesson[]) => ls.filter((l) => l.status !== 'cancelled').reduce((a, l) => a + l.fee, 0)
 
-export function Week({ anchor, setAnchor, lessons, slots, onOpenDay, onAddSlot, onEditSlot, onSaveWeek, holiday, onStatus }: Props) {
-  const { from, to } = periodRange('week', anchor)
+export function Week({ from, to, setRange, lessons, slots, onOpenDay, onAddSlot, onEditSlot, onSaveWeek, holiday, onStatus }: Props) {
   const today = todayISO()
-  const days = Array.from({ length: 7 }, (_, i) => addDays(from, i))
+  const span = Math.round((new Date(to + 'T00:00').getTime() - new Date(from + 'T00:00').getTime()) / 86400000) + 1
+  const days = Array.from({ length: span }, (_, i) => addDays(from, i))
+  const calendarWeek = periodRange('week', today)
+  const isCalendarWeek = from === calendarWeek.from && to === calendarWeek.to
+  const isNext7 = from === today && to === addDays(today, 6)
   const weekLessons = lessons.filter((l) => l.date >= from && l.date <= to && l.status !== 'cancelled')
   const oneOffs = lessons.filter((l) => l.date >= from && l.date <= to && !l.slotId && l.status !== 'cancelled').length
   const expected = weekLessons.reduce((s, l) => s + l.fee, 0)
@@ -30,13 +35,21 @@ export function Week({ anchor, setAnchor, lessons, slots, onOpenDay, onAddSlot, 
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between">
-        <button onClick={() => setAnchor(addDays(from, -7))} aria-label={tr('Προηγούμενη εβδομάδα')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronLeft size={18} /></button>
-        <button onClick={() => setAnchor(today)} className="text-center">
+        <button onClick={() => setRange(addDays(from, -span), addDays(to, -span))} aria-label={tr('Προηγούμενη εβδομάδα')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronLeft size={18} /></button>
+        <button onClick={() => setRange(calendarWeek.from, calendarWeek.to)} className="text-center">
           <p className="text-base font-semibold text-fg">{formatShort(from)} – {formatShort(to)}</p>
           <p className="text-xs text-slate-400">{tr('{0} μαθήματα · {1} / {2}', weekLessons.length, money(paid), money(expected))}</p>
         </button>
-        <button onClick={() => setAnchor(addDays(from, 7))} aria-label={tr('Επόμενη εβδομάδα')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronRight size={18} /></button>
+        <button onClick={() => setRange(addDays(from, span), addDays(to, span))} aria-label={tr('Επόμενη εβδομάδα')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronRight size={18} /></button>
       </header>
+
+      <div className="space-y-2">
+        <RangePicker from={from} to={to} onChange={setRange} maxDays={62} />
+        <div className="flex gap-2 text-xs">
+          <button onClick={() => setRange(calendarWeek.from, calendarWeek.to)} className={`rounded-full px-3 py-1.5 font-medium ${isCalendarWeek ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-300'}`}>{tr('Δευ–Κυρ')}</button>
+          <button onClick={() => setRange(today, addDays(today, 6))} className={`rounded-full px-3 py-1.5 font-medium ${isNext7 ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-300'}`}>{tr('7 ημέρες από σήμερα')}</button>
+        </div>
+      </div>
 
       {expected > 0 && (
         <div>
@@ -48,12 +61,12 @@ export function Week({ anchor, setAnchor, lessons, slots, onOpenDay, onAddSlot, 
       )}
 
       <div className="space-y-2 lg:grid lg:grid-cols-7 lg:gap-2 lg:space-y-0">
-        {days.map((d, i) => {
+        {days.map((d) => {
           const ls = lessons.filter((l) => l.date === d).sort((a, b) => a.time.localeCompare(b.time))
           return (
             <div key={d} className={`flex gap-3 rounded-2xl border p-3 lg:flex-col lg:gap-2 ${d === today ? 'border-indigo-400/50 bg-indigo-500/10' : 'border-white/5 bg-slate-800/60'}`}>
               <button onClick={() => onOpenDay(d)} aria-label={tr('Άνοιγμα ημέρας')} className="w-12 shrink-0 self-stretch rounded-xl text-center lg:flex lg:w-full lg:items-baseline lg:gap-1.5 lg:self-auto lg:px-1 active:scale-95 active:bg-fg/5">
-                <p className="text-xs text-slate-400 lg:order-1">{weekdaysShort()[i]}</p>
+                <p className="text-xs text-slate-400 lg:order-1">{weekdaysShort()[weekdayIndex(d)]}</p>
                 <p className="text-lg font-bold text-fg lg:order-2">{Number(d.slice(8))}</p>
                 {dayTotal(ls) > 0 && <p className="text-[10px] text-slate-400 lg:order-3 lg:ml-auto">{money(dayTotal(ls))}</p>}
               </button>

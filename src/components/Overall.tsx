@@ -3,7 +3,8 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, ComposedChart, Line, Res
 import { Activity, TrendingDown, TrendingUp } from 'lucide-react'
 import type { AppData } from '../types'
 import { RANGES, cancelTrend, categoryTrend, overall, volatility, type RangeKey } from '../lib/stats'
-import { formatShort, money, parseISO, todayISO } from '../lib/dates'
+import { addDays, formatShort, money, parseISO, todayISO } from '../lib/dates'
+import { RangePicker } from './RangePicker'
 import { catLabel } from '../constants'
 import { locale, tr, useLang } from '../i18n'
 
@@ -12,9 +13,10 @@ const fmtSigned = (n: number) => `${n >= 0 ? '+' : '−'}${money(Math.abs(n))}`
 export function Overall({ data, isLight }: { data: AppData; isLight: boolean }) {
   const lang = useLang()
   const [range, setRange] = useState<RangeKey>('3M')
+  const [custom, setCustom] = useState(() => ({ from: addDays(todayISO(), -29), to: todayISO() }))
   const [hover, setHover] = useState<number | null>(null)
   const days = RANGES.find((r) => r.key === range)!.days
-  const o = useMemo(() => overall(data, days, todayISO()), [data, days, lang])
+  const o = useMemo(() => overall(data, days, todayISO(), range === 'CUSTOM' ? custom : undefined), [data, days, lang, range, custom])
   const trend = useMemo(() => categoryTrend(data, todayISO()), [data, lang])
   const cancels = useMemo(() => cancelTrend(data, todayISO()), [data, lang])
   const vol = useMemo(() => volatility(data, todayISO()), [data])
@@ -33,7 +35,7 @@ export function Overall({ data, isLight }: { data: AppData; isLight: boolean }) 
   const pct = o.startBalance > 0 ? (change / o.startBalance) * 100 : null
   const up = change >= 0
   const color = up ? '#34d399' : '#fb7185'
-  const long = days === null || days > 120
+  const long = o.series.length > 120
   const label = (d: string) => parseISO(d).toLocaleDateString(locale(), long ? { month: 'short', year: '2-digit' } : { day: 'numeric', month: 'short' })
 
   return (
@@ -65,9 +67,10 @@ export function Overall({ data, isLight }: { data: AppData; isLight: boolean }) 
           </ResponsiveContainer>
         </div>
 
-        <div className="mt-3 grid grid-cols-6 gap-1 rounded-2xl bg-slate-900 p-1">
+        {range === 'CUSTOM' && <div className="mt-3"><RangePicker from={custom.from} to={custom.to} onChange={(f, t) => { setHover(null); setCustom({ from: f, to: t }) }} /></div>}
+        <div className="mt-3 grid grid-cols-[repeat(6,minmax(0,1fr))_minmax(0,2fr)] gap-1 rounded-2xl bg-slate-900 p-1">
           {RANGES.map((r) => (
-            <button key={r.key} onClick={() => { setRange(r.key); setHover(null) }} className={`rounded-xl py-1.5 text-xs font-semibold ${r.key === range ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>{r.label}</button>
+            <button key={r.key} onClick={() => { setRange(r.key); setHover(null) }} className={`rounded-xl py-1.5 text-[11px] font-semibold ${r.key === range ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>{r.label}</button>
           ))}
         </div>
       </div>
@@ -80,7 +83,7 @@ export function Overall({ data, isLight }: { data: AppData; isLight: boolean }) 
         {o.bestDay && <Tile label={tr('Καλύτερη ημέρα')} value={fmtSigned(o.bestDay.net)} sub={formatShort(o.bestDay.date)} cls="text-emerald-400" />}
         {o.worstDay && <Tile label={tr('Χειρότερη ημέρα')} value={fmtSigned(o.worstDay.net)} sub={formatShort(o.worstDay.date)} cls="text-rose-400" />}
         {o.bestMonth && <Tile label={tr('Καλύτερος μήνας')} value={fmtSigned(o.bestMonth.net)} sub={o.bestMonth.label} cls="text-emerald-400" />}
-        <Tile label={tr('Σύνολο μέχρι σήμερα')} value={money(o.total)} cls="text-fg" />
+        <Tile label={tr('Σύνολο μέχρι σήμερα')} value={money(o.totalToday)} cls="text-fg" />
         {o.runwayDays !== null && <Tile label={tr('Το υπόλοιπο φτάνει για')} value={tr('~{0} ημέρες', o.runwayDays)} sub={tr('με τον ρυθμό εξόδων 30 ημερών')} cls={o.runwayDays < 14 ? 'text-rose-400' : 'text-fg'} />}
       </div>
 

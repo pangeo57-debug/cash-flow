@@ -36,19 +36,21 @@ export function weekdaysShort(): string[] {
   return v
 }
 
-export type Period = 'day' | 'week' | 'fortnight' | 'month'
+export type Period = 'day' | 'week' | 'fortnight' | 'month' | 'custom'
 
 export const periodLabels = (): Record<Period, string> => ({
   day: tr('Ημέρα'),
   week: tr('Εβδομάδα'),
   fortnight: tr('15ήμερο'),
   month: tr('Μήνας'),
+  custom: tr('Διάστημα'),
 })
 
 export function periodRange(period: Period, anchor: string): { from: string; to: string } {
   const d = parseISO(anchor)
   switch (period) {
     case 'day':
+    case 'custom': // the interval is chosen by the user, not derived from the anchor
       return { from: anchor, to: anchor }
     case 'week': {
       const from = addDays(anchor, -weekdayIndex(anchor))
