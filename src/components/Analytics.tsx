@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, ComposedChart, Line, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { AlertTriangle, Calculator, Clock, Gauge, Layers, PiggyBank, Trophy, Fuel, GraduationCap, Target, Users, ChevronLeft, ChevronRight, Info, Sparkles, TrendingDown, TrendingUp, X } from 'lucide-react'
 import type { AppData } from '../types'
-import { PERIOD_LABELS, addDays, formatShort, money, parseISO, periodRange, type Period } from '../lib/dates'
+import { periodLabels, addDays, formatShort, money, parseISO, periodRange, type Period } from '../lib/dates'
 import { anomalies, budgetStatus, buildInsights, monthForecast, summarize } from '../lib/stats'
 import { todayISO } from '../lib/dates'
-import { findCategory } from '../constants'
+import { catLabel, findCategory } from '../constants'
+import { locale, tr, useLang } from '../i18n'
 
 export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppData; anchor: string; isLight: boolean }) {
   const tooltipStyle = isLight
@@ -14,13 +15,14 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
   const grid = isLight ? 'rgba(15,23,42,.08)' : 'rgba(255,255,255,.06)'
   const cursor = { fill: isLight ? 'rgba(15,23,42,.05)' : 'rgba(255,255,255,.04)' }
 
+  const lang = useLang()
   const [period, setPeriod] = useState<Period>('week')
   const [anchor, setAnchor] = useState(initialAnchor)
   const [cat, setCat] = useState<string | null>(null)
   const { from, to } = periodRange(period, anchor)
   const prevRange = periodRange(period, addDays(from, -1))
-  const s = useMemo(() => summarize(data, from, to), [data, from, to])
-  const prev = useMemo(() => summarize(data, prevRange.from, prevRange.to), [data, prevRange.from, prevRange.to])
+  const s = useMemo(() => summarize(data, from, to), [data, from, to, lang])
+  const prev = useMemo(() => summarize(data, prevRange.from, prevRange.to), [data, prevRange.from, prevRange.to, lang])
   const forecast = useMemo(() => monthForecast(data, anchor, todayISO()), [data, anchor])
   const today = todayISO()
   // how the per-day average is divided is the user's choice
@@ -57,7 +59,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
   const noSpendDays = s.byDay.filter((d) => d.date <= today && d.expense === 0).length
   const budget = useMemo(() => budgetStatus(data, anchor, today), [data, anchor, today])
   const unusual = useMemo(() => anomalies(data, period, from, to, today), [data, period, from, to, today])
-  const insights = useMemo(() => buildInsights(s), [s])
+  const insights = useMemo(() => buildInsights(s), [s, lang])
   const catTx = useMemo(
     () => (cat ? data.transactions.filter((t) => t.type === 'expense' && t.category === cat && t.date >= from && t.date <= to).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt) : []),
     [cat, data.transactions, from, to],
@@ -78,17 +80,17 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-4 gap-1 rounded-2xl bg-slate-800 p-1">
-        {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+        {(Object.keys(periodLabels()) as Period[]).map((p) => (
           <button key={p} onClick={() => changePeriod(p)} className={`rounded-xl py-2 text-xs font-medium transition ${p === period ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>
-            {PERIOD_LABELS[p]}
+            {periodLabels()[p]}
           </button>
         ))}
       </div>
 
       <div className="flex items-center justify-between">
-        <button onClick={() => move(-1)} aria-label="Προηγούμενη" className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronLeft size={18} /></button>
+        <button onClick={() => move(-1)} aria-label={tr('Προηγούμενη')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronLeft size={18} /></button>
         <button onClick={() => { setCat(null); setAnchor(initialAnchor) }} className="text-sm font-medium text-slate-200">{label} <span className="text-slate-500">{parseISO(from).getFullYear()}</span></button>
-        <button onClick={() => move(1)} aria-label="Επόμενη" className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronRight size={18} /></button>
+        <button onClick={() => move(1)} aria-label={tr('Επόμενη')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronRight size={18} /></button>
       </div>
 
       <div className="masonry space-y-5 lg:space-y-0">
@@ -96,7 +98,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
       {budget.rows.length > 0 && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Gauge size={16} className="text-indigo-300" /> Όρια εξόδων · <span className="capitalize">{parseISO(budget.month).toLocaleDateString('el-GR', { month: 'long' })}</span></h3>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Gauge size={16} className="text-indigo-300" /> {tr('Όρια εξόδων ·')} <span className="capitalize">{parseISO(budget.month).toLocaleDateString(locale(), { month: 'long' })}</span></h3>
           <ul className="space-y-3">
             {budget.rows.map((r) => {
               const over = r.pct >= 100
@@ -111,8 +113,8 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
                     <div className={`h-full rounded-full ${over ? 'bg-rose-400' : warn ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{ width: `${Math.min(100, r.pct)}%` }} />
                   </div>
                   <p className={`mt-0.5 text-[11px] ${over ? 'text-rose-400' : warn ? 'text-amber-400' : 'text-slate-500'}`}>
-                    {over ? `Ξεπέρασες το όριο κατά ${money(r.spent - r.limit)}` : warn ? `Έμειναν ${money(r.limit - r.spent)}` : `${Math.round(r.pct)}%`}
-                    {!over && r.projected > r.limit ? ` · με αυτόν τον ρυθμό θα φτάσεις ${money(r.projected)}` : ''}
+                    {over ? tr('Ξεπέρασες το όριο κατά {0}', money(r.spent - r.limit)) : warn ? tr('Έμειναν {0}', money(r.limit - r.spent)) : `${Math.round(r.pct)}%`}
+                    {!over && r.projected > r.limit ? tr(' · με αυτόν τον ρυθμό θα φτάσεις {0}', money(r.projected)) : ''}
                   </p>
                 </li>
               )
@@ -123,23 +125,23 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
       {/* balance with comparison to previous period */}
       <div className="rounded-3xl bg-slate-800/70 p-4">
-        <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><TrendingUp size={16} className="text-indigo-300" /> Οικονομικό ισοζύγιο</h3>
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><TrendingUp size={16} className="text-indigo-300" /> {tr('Οικονομικό ισοζύγιο')}</h3>
         <dl className="space-y-2 text-sm">
-          <Row label="Μπήκαν" value={money(s.income)} cls="text-emerald-400" delta={delta(s.income, prev.income, true)} />
-          <Row label="Βγήκαν" value={money(s.expense)} cls="text-rose-400" delta={delta(s.expense, prev.expense, false)} />
+          <Row label={tr('Μπήκαν')} value={money(s.income)} cls="text-emerald-400" delta={delta(s.income, prev.income, true)} />
+          <Row label={tr('Βγήκαν')} value={money(s.expense)} cls="text-rose-400" delta={delta(s.expense, prev.expense, false)} />
           <div className="my-1 border-t border-fg/10" />
-          <Row label="Έμειναν (καθαρό)" value={money(s.net)} cls={s.net >= 0 ? 'text-fg font-bold' : 'text-rose-400 font-bold'} delta={delta(s.net, prev.net, true)} />
-          <Row label={`Χαμένα από ακυρώσεις (${s.cancelledCount})`} value={money(s.lostIncome)} cls="text-amber-400" />
-          <Row label="Ολοκληρωμένα μαθήματα" value={String(s.doneCount)} cls="text-slate-300" />
+          <Row label={tr('Έμειναν (καθαρό)')} value={money(s.net)} cls={s.net >= 0 ? 'text-fg font-bold' : 'text-rose-400 font-bold'} delta={delta(s.net, prev.net, true)} />
+          <Row label={tr('Χαμένα από ακυρώσεις ({0})', s.cancelledCount)} value={money(s.lostIncome)} cls="text-amber-400" />
+          <Row label={tr('Ολοκληρωμένα μαθήματα')} value={String(s.doneCount)} cls="text-slate-300" />
         </dl>
-        <p className="mt-3 text-[11px] text-slate-500">Σύγκριση με {formatShort(prevRange.from)}{prevRange.from !== prevRange.to ? ` – ${formatShort(prevRange.to)}` : ''}</p>
+        <p className="mt-3 text-[11px] text-slate-500">{tr('Σύγκριση με {0}{1}', formatShort(prevRange.from), prevRange.from !== prevRange.to ? ` – ${formatShort(prevRange.to)}` : '')}</p>
       </div>
 
       {(s.incomeCount > 0 || s.expenseCount > 0) && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Calculator size={16} className="text-indigo-300" /> Μέσοι όροι</h3>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Calculator size={16} className="text-indigo-300" /> {tr('Μέσοι όροι')}</h3>
           <div className="mb-3 grid grid-cols-2 gap-1 rounded-2xl bg-slate-900 p-1 text-[11px] font-medium">
-            {AVG_MODES.map(([id, label]) => (
+            {avgModes().map(([id, label]) => (
               <button key={id} onClick={() => setAvgMode(id)} className={`rounded-xl px-2 py-1.5 ${avgMode === id ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>{label}</button>
             ))}
           </div>
@@ -147,21 +149,21 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
             <thead>
               <tr className="text-[11px] text-slate-400">
                 <th className="pb-1.5 text-left font-normal" />
-                <th className="pb-1.5 text-right font-medium text-emerald-400">Έσοδα</th>
-                <th className="pb-1.5 text-right font-medium text-rose-400">Έξοδα</th>
+                <th className="pb-1.5 text-right font-medium text-emerald-400">{tr('Έσοδα')}</th>
+                <th className="pb-1.5 text-right font-medium text-rose-400">{tr('Έξοδα')}</th>
               </tr>
             </thead>
             <tbody className="[&_td]:py-1.5 [&_tr]:border-t [&_tr]:border-fg/10">
               {days > 0 && (
-                <MeanRow label="Ανά ημέρα" inc={avgInc} exp={avgExp} incDelta={delta(avgInc, prevAvgInc, true)} expDelta={delta(avgExp, prevAvgExp, false)} />
+                <MeanRow label={tr('Ανά ημέρα')} inc={avgInc} exp={avgExp} incDelta={delta(avgInc, prevAvgInc, true)} expDelta={delta(avgExp, prevAvgExp, false)} />
               )}
-              {avgMode !== 'active' && days >= 7 && <MeanRow label="Ανά εβδομάδα" inc={avgInc * 7} exp={avgExp * 7} />}
-              {avgMode !== 'active' && days >= 28 && <MeanRow label="Ανά μήνα (30 ημ.)" inc={avgInc * 30} exp={avgExp * 30} />}
-              <MeanRow label="Ανά κίνηση" inc={s.incomeCount ? s.income / s.incomeCount : 0} exp={s.expenseCount ? s.expense / s.expenseCount : 0} sub={`${s.incomeCount} έσοδα · ${s.expenseCount} έξοδα`} />
+              {avgMode !== 'active' && days >= 7 && <MeanRow label={tr('Ανά εβδομάδα')} inc={avgInc * 7} exp={avgExp * 7} />}
+              {avgMode !== 'active' && days >= 28 && <MeanRow label={tr('Ανά μήνα (30 ημ.)')} inc={avgInc * 30} exp={avgExp * 30} />}
+              <MeanRow label={tr('Ανά κίνηση')} inc={s.incomeCount ? s.income / s.incomeCount : 0} exp={s.expenseCount ? s.expense / s.expenseCount : 0} sub={tr('{0} έσοδα · {1} έξοδα', s.incomeCount, s.expenseCount)} />
             </tbody>
           </table>
-          <p className="mt-2 text-[11px] text-slate-500">Ο μέσος ανά ημέρα διαιρείται με <b className="text-slate-300">{days} {days === 1 ? 'ημέρα' : 'ημέρες'}</b> ({AVG_MODES.find(([id]) => id === avgMode)![1].toLowerCase()}).</p>
-          {showDaily && elapsed > 0 && <p className="mt-1 text-[11px] text-slate-400">Ημέρες χωρίς έξοδο: <b className="text-slate-200">{noSpendDays} από {elapsed}</b></p>}
+          <p className="mt-2 text-[11px] text-slate-500">{tr('Ο μέσος ανά ημέρα διαιρείται με')} <b className="text-slate-300">{days} {days === 1 ? tr('ημέρα') : tr('ημέρες')}</b> ({avgModes().find(([id]) => id === avgMode)![1].toLowerCase()}).</p>
+          {showDaily && elapsed > 0 && <p className="mt-1 text-[11px] text-slate-400">{tr('Ημέρες χωρίς έξοδο:')} <b className="text-slate-200">{tr('{0} από {1}', noSpendDays, elapsed)}</b></p>}
         </div>
       )}
 
@@ -169,21 +171,21 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
         <div className="rounded-3xl bg-slate-800/70 p-4">
           {unusual.length > 0 && (
             <div className="mb-4">
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-fg"><AlertTriangle size={16} className="text-amber-400" /> Ασυνήθιστα έξοδα</h3>
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-fg"><AlertTriangle size={16} className="text-amber-400" /> {tr('Ασυνήθιστα έξοδα')}</h3>
               <ul className="space-y-1.5 text-sm">
                 {unusual.map((a) => (
                   <li key={a.category} className="flex justify-between gap-2">
                     <span className="text-slate-200">{findCategory(a.category).label}</span>
-                    <span className="text-amber-400">{money(a.amount)} <span className="text-slate-500">(συνήθως ~{money(a.typical)} · ×{a.ratio.toFixed(1)})</span></span>
+                    <span className="text-amber-400">{money(a.amount)} <span className="text-slate-500">{tr('(συνήθως ~{0} · ×{1})', money(a.typical), a.ratio.toFixed(1))}</span></span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-1 text-[11px] text-slate-500">Σε σχέση με τον μέσο όρο των 3 προηγούμενων περιόδων.</p>
+              <p className="mt-1 text-[11px] text-slate-500">{tr('Σε σχέση με τον μέσο όρο των 3 προηγούμενων περιόδων.')}</p>
             </div>
           )}
           {s.topExpenses.length > 0 && (
             <>
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-fg"><Trophy size={16} className="text-indigo-300" /> Τα μεγαλύτερα έξοδα</h3>
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-fg"><Trophy size={16} className="text-indigo-300" /> {tr('Τα μεγαλύτερα έξοδα')}</h3>
               <ol className="space-y-1.5 text-sm">
                 {s.topExpenses.map((t, i) => (
                   <li key={t.id} className="flex items-center gap-2">
@@ -201,22 +203,22 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
       {s.expense > 0 && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-fg"><Layers size={16} className="text-indigo-300" /> Πάγια vs ελεύθερα έξοδα</h3>
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-fg"><Layers size={16} className="text-indigo-300" /> {tr('Πάγια vs ελεύθερα έξοδα')}</h3>
           <div className="flex h-3 overflow-hidden rounded-full bg-slate-700">
             <div className="bg-indigo-400" style={{ width: `${(s.fixedExpense / s.expense) * 100}%` }} />
             <div className="bg-rose-400" style={{ width: `${((s.expense - s.fixedExpense) / s.expense) * 100}%` }} />
           </div>
           <div className="mt-2 flex justify-between text-sm">
-            <span className="text-slate-300"><i className="mr-1 inline-block h-2 w-2 rounded-full bg-indigo-400" />Πάγια {money(s.fixedExpense)} ({Math.round((s.fixedExpense / s.expense) * 100)}%)</span>
-            <span className="text-slate-300"><i className="mr-1 inline-block h-2 w-2 rounded-full bg-rose-400" />Ελεύθερα {money(s.expense - s.fixedExpense)}</span>
+            <span className="text-slate-300"><i className="mr-1 inline-block h-2 w-2 rounded-full bg-indigo-400" />{tr('Πάγια {0} ({1}%)', money(s.fixedExpense), Math.round((s.fixedExpense / s.expense) * 100))}</span>
+            <span className="text-slate-300"><i className="mr-1 inline-block h-2 w-2 rounded-full bg-rose-400" />{tr('Ελεύθερα {0}', money(s.expense - s.fixedExpense))}</span>
           </div>
-          <p className="mt-1 text-[11px] text-slate-500">Πάγια = Ρεύμα, Τα απαραίτητα και ό,τι έχεις ορίσει ως πάγια κίνηση.</p>
+          <p className="mt-1 text-[11px] text-slate-500">{tr('Πάγια = Ρεύμα, Τα απαραίτητα και ό,τι έχεις ορίσει ως πάγια κίνηση.')}</p>
         </div>
       )}
 
       {s.incomeByCategory.length > 0 && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><PiggyBank size={16} className="text-indigo-300" /> Από πού έρχονται τα έσοδα</h3>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><PiggyBank size={16} className="text-indigo-300" /> {tr('Από πού έρχονται τα έσοδα')}</h3>
           <ul className="space-y-2.5">
             {s.incomeByCategory.map((c) => (
               <li key={c.name}>
@@ -230,15 +232,15 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
       {s.lessonWeekday.some((d) => d.income > 0) && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-fg"><Clock size={16} className="text-indigo-300" /> Πιο προσοδοφόρες μέρες και ώρες</h3>
-          <p className="mb-2 text-[11px] text-slate-500">Έσοδα από ολοκληρωμένα μαθήματα στην περίοδο.</p>
+          <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-fg"><Clock size={16} className="text-indigo-300" /> {tr('Πιο προσοδοφόρες μέρες και ώρες')}</h3>
+          <p className="mb-2 text-[11px] text-slate-500">{tr('Έσοδα από ολοκληρωμένα μαθήματα στην περίοδο.')}</p>
           <div className="h-36">
             <ResponsiveContainer>
               <BarChart data={s.lessonWeekday} margin={{ left: -20, right: 4 }}>
                 <XAxis dataKey="day" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={tooltipStyle} cursor={cursor} formatter={(v: number) => money(v)} />
-                <Bar dataKey="income" name="Έσοδα" radius={[6, 6, 0, 0]}>
+                <Bar dataKey="income" name={tr('Έσοδα')} radius={[6, 6, 0, 0]}>
                   {s.lessonWeekday.map((d, i) => <Cell key={i} fill={d.income === Math.max(...s.lessonWeekday.map((x) => x.income)) ? '#34d399' : '#818cf8'} />)}
                 </Bar>
               </BarChart>
@@ -251,7 +253,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
                   <XAxis dataKey="hour" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                   <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={tooltipStyle} cursor={cursor} formatter={(v: number) => money(v)} />
-                  <Bar dataKey="income" name="Έσοδα" radius={[6, 6, 0, 0]}>
+                  <Bar dataKey="income" name={tr('Έσοδα')} radius={[6, 6, 0, 0]}>
                     {s.lessonHour.map((d, i) => <Cell key={i} fill={d.income === Math.max(...s.lessonHour.map((x) => x.income)) ? '#34d399' : '#818cf8'} />)}
                   </Bar>
                 </BarChart>
@@ -263,7 +265,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
       {s.byStudent.length > 0 && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Users size={16} className="text-indigo-300" /> Ανά μαθητή</h3>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Users size={16} className="text-indigo-300" /> {tr('Ανά μαθητή')}</h3>
           <ul className="space-y-3">
             {s.byStudent.map((st) => (
               <li key={st.name}>
@@ -275,9 +277,9 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
                   <div className="h-full rounded-full bg-emerald-400" style={{ width: `${(st.income / (s.byStudent[0].income || 1)) * 100}%` }} />
                 </div>
                 <p className="mt-1 flex flex-wrap gap-x-3 text-[11px] text-slate-400">
-                  <span>{st.done} μαθ.</span>
-                  {st.done > 0 && <span>μ.ο. {money(st.avg)}</span>}
-                  {st.cancelled > 0 && <span className="text-amber-400">{st.cancelled} {st.cancelled === 1 ? 'ακύρωση' : 'ακυρώσεις'} ({st.cancelRate}%) · −{money(st.lost)}</span>}
+                  <span>{tr('{0} μαθ.', st.done)}</span>
+                  {st.done > 0 && <span>{tr('μ.ο. {0}', money(st.avg))}</span>}
+                  {st.cancelled > 0 && <span className="text-amber-400">{st.cancelled} {st.cancelled === 1 ? tr('ακύρωση') : tr('ακυρώσεις')} ({st.cancelRate}%) · −{money(st.lost)}</span>}
                 </p>
               </li>
             ))}
@@ -287,36 +289,36 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
       {s.doneCount > 0 && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Fuel size={16} className="text-indigo-300" /> Απόδοση μαθημάτων</h3>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Fuel size={16} className="text-indigo-300" /> {tr('Απόδοση μαθημάτων')}</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl bg-slate-900 p-3">
-              <p className="text-[11px] text-slate-400">Έσοδα / ώρα</p>
+              <p className="text-[11px] text-slate-400">{tr('Έσοδα / ώρα')}</p>
               <p className="text-lg font-bold text-emerald-400">{money(s.transport.incomePerHour)}</p>
             </div>
             <div className="rounded-2xl bg-slate-900 p-3">
-              <p className="text-[11px] text-slate-400">Καθαρά / ώρα</p>
+              <p className="text-[11px] text-slate-400">{tr('Καθαρά / ώρα')}</p>
               <p className="text-lg font-bold text-emerald-400">{money(s.transport.netPerHour)}</p>
             </div>
             <div className="rounded-2xl bg-slate-900 p-3">
-              <p className="text-[11px] text-slate-400">Μετακίνηση / μάθημα</p>
+              <p className="text-[11px] text-slate-400">{tr('Μετακίνηση / μάθημα')}</p>
               <p className="text-lg font-bold text-rose-400">{money(s.transport.perLesson)}</p>
             </div>
             <div className="rounded-2xl bg-slate-900 p-3">
-              <p className="text-[11px] text-slate-400">Καθαρό / μάθημα</p>
+              <p className="text-[11px] text-slate-400">{tr('Καθαρό / μάθημα')}</p>
               <p className="text-lg font-bold text-emerald-400">{money(s.transport.netPerLesson)}</p>
             </div>
           </div>
-          <p className="mt-2 text-[11px] text-slate-400">{s.doneCount} μαθήματα · {s.transport.hours.toFixed(1)} ώρες. Μετακίνηση = βενζίνη + διόδια + μετακινήσεις ({money(s.transport.total)}, {s.transport.share}% των εσόδων από μαθήματα). Μαθήματα χωρίς διάρκεια μετράνε 60 λεπτά.</p>
+          <p className="mt-2 text-[11px] text-slate-400">{tr('{0} μαθήματα · {1} ώρες. Μετακίνηση = βενζίνη + διόδια + μετακινήσεις ({2}, {3}% των εσόδων από μαθήματα). Μαθήματα χωρίς διάρκεια μετράνε 60 λεπτά.', s.doneCount, s.transport.hours.toFixed(1), money(s.transport.total), s.transport.share)}</p>
         </div>
       )}
 
       {showDaily && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-1 text-sm font-semibold text-fg">Ημέρα προς ημέρα</h3>
+          <h3 className="mb-1 text-sm font-semibold text-fg">{tr('Ημέρα προς ημέρα')}</h3>
           <p className="mb-2 flex gap-3 text-[11px] text-slate-400">
-            <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-400" />Έσοδα</span>
-            <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-rose-400" />Έξοδα</span>
-            <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-indigo-400" />Σωρευτικό καθαρό</span>
+            <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-400" />{tr('Έσοδα')}</span>
+            <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-rose-400" />{tr('Έξοδα')}</span>
+            <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-indigo-400" />{tr('Σωρευτικό καθαρό')}</span>
           </p>
           <div className="h-52">
             <ResponsiveContainer>
@@ -325,9 +327,9 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
                 <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                 <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={tooltipStyle} cursor={cursor} formatter={(v: number) => money(v)} labelFormatter={(_, p) => (p?.[0]?.payload?.date ? formatShort(p[0].payload.date) : '')} />
-                <Bar dataKey="income" name="Έσοδα" fill="#34d399" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expense" name="Έξοδα" fill="#fb7185" radius={[4, 4, 0, 0]} />
-                <Line dataKey="cum" name="Σωρευτικό καθαρό" stroke="#818cf8" strokeWidth={2.5} dot={false} type="monotone" />
+                <Bar dataKey="income" name={tr('Έσοδα')} fill="#34d399" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expense" name={tr('Έξοδα')} fill="#fb7185" radius={[4, 4, 0, 0]} />
+                <Line dataKey="cum" name={tr('Σωρευτικό καθαρό')} stroke="#818cf8" strokeWidth={2.5} dot={false} type="monotone" />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -335,23 +337,23 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
       )}
 
       <div className="rounded-3xl bg-slate-800/70 p-4">
-        <h3 className="mb-1 text-sm font-semibold text-fg">Έξοδα ανά κατηγορία</h3>
+        <h3 className="mb-1 text-sm font-semibold text-fg">{tr('Έξοδα ανά κατηγορία')}</h3>
         {s.byCategory.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-500">Δεν υπάρχουν έξοδα</p>
+          <p className="py-6 text-center text-sm text-slate-500">{tr('Δεν υπάρχουν έξοδα')}</p>
         ) : (
           <>
-            <p className="mb-1 text-[11px] text-slate-500">Πάτα μια κατηγορία για να δεις τις κινήσεις της.</p>
+            <p className="mb-1 text-[11px] text-slate-500">{tr('Πάτα μια κατηγορία για να δεις τις κινήσεις της.')}</p>
             <div className="relative h-52">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={s.byCategory} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2} stroke="none" onClick={(d) => setCat(cat === d.name ? null : d.name)}>
+                  <Pie data={s.byCategory.map((c) => ({ ...c, label: catLabel(c.name) }))} dataKey="value" nameKey="label" innerRadius={55} outerRadius={85} paddingAngle={2} stroke="none" onClick={(d) => setCat(cat === d.name ? null : d.name)}>
                     {s.byCategory.map((c) => <Cell key={c.name} fill={c.color} opacity={cat && cat !== c.name ? 0.25 : 1} />)}
                   </Pie>
                   <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => money(v)} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[11px] text-slate-400">{cat ?? 'Σύνολο'}</span>
+                <span className="text-[11px] text-slate-400">{cat ? catLabel(cat) : tr('Σύνολο')}</span>
                 <span className="text-lg font-bold text-fg">{money(cat ? (s.byCategory.find((c) => c.name === cat)?.value ?? 0) : s.expense)}</span>
               </div>
             </div>
@@ -360,7 +362,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
                 <li key={c.name}>
                   <button onClick={() => setCat(cat === c.name ? null : c.name)} className={`flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-sm active:scale-[.99] ${cat === c.name ? 'bg-indigo-500/15' : ''}`}>
                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
-                    <span className="flex-1 text-left text-slate-300">{c.name}</span>
+                    <span className="flex-1 text-left text-slate-300">{catLabel(c.name)}</span>
                     <span className="text-slate-400">{Math.round((c.value / s.expense) * 100)}%</span>
                     <span className="w-20 text-right font-medium text-fg">{money(c.value)}</span>
                   </button>
@@ -371,8 +373,8 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
             {cat && (
               <div className="mt-3 rounded-2xl bg-slate-900 p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-fg">{cat} · {catTx.length} κινήσεις</p>
-                  <button onClick={() => setCat(null)} aria-label="Κλείσιμο" className="rounded-full bg-fg/10 p-1 text-slate-300"><X size={14} /></button>
+                  <p className="text-sm font-semibold text-fg">{tr('{0} · {1} κινήσεις', catLabel(cat), catTx.length)}</p>
+                  <button onClick={() => setCat(null)} aria-label={tr('Κλείσιμο')} className="rounded-full bg-fg/10 p-1 text-slate-300"><X size={14} /></button>
                 </div>
                 <ul className="space-y-1.5 text-sm">
                   {catTx.map((t) => {
@@ -395,7 +397,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
       {showWeekday && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-2 text-sm font-semibold text-fg">Ποιες ημέρες της εβδομάδας βγάζεις / ξοδεύεις</h3>
+          <h3 className="mb-2 text-sm font-semibold text-fg">{tr('Ποιες ημέρες της εβδομάδας βγάζεις / ξοδεύεις')}</h3>
           <div className="h-48">
             <ResponsiveContainer>
               <BarChart data={s.byWeekday} margin={{ left: -20, right: 4 }}>
@@ -403,8 +405,8 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
                 <XAxis dataKey="day" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={tooltipStyle} cursor={cursor} formatter={(v: number) => money(v)} />
-                <Bar dataKey="income" name="Έσοδα" fill="#34d399" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="expense" name="Έξοδα" fill="#fb7185" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="income" name={tr('Έσοδα')} fill="#34d399" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="expense" name={tr('Έξοδα')} fill="#fb7185" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -428,11 +430,11 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 }
 
 type AvgMode = 'elapsed' | 'full' | 'first' | 'active'
-const AVG_MODES: [AvgMode, string][] = [
-  ['elapsed', 'Μέρες που πέρασαν'],
-  ['full', 'Όλες οι μέρες'],
-  ['first', 'Από 1η καταχώρηση'],
-  ['active', 'Μέρες με κινήσεις'],
+const avgModes = (): [AvgMode, string][] => [
+  ['elapsed', tr('Μέρες που πέρασαν')],
+  ['full', tr('Όλες οι μέρες')],
+  ['first', tr('Από 1η καταχώρηση')],
+  ['active', tr('Μέρες με κινήσεις')],
 ]
 
 const daysBetween = (a: string, b: string) => Math.round((parseISO(b).getTime() - parseISO(a).getTime()) / 86400000) + 1
@@ -463,38 +465,36 @@ function Row({ label, value, cls, delta }: { label: string; value: string; cls: 
 }
 
 function GoalCard({ f, goal }: { f: ReturnType<typeof monthForecast>; goal: number }) {
-  const monthName = parseISO(f.from).toLocaleDateString('el-GR', { month: 'long' })
+  const monthName = parseISO(f.from).toLocaleDateString(locale(), { month: 'long' })
   const pct = goal > 0 ? Math.min(100, (f.earned / goal) * 100) : 0
   const missing = Math.max(0, goal - f.earned)
   const lessonsNeeded = Math.ceil(missing / (f.avgFee || 20))
   const reach = f.total >= goal
   return (
     <div className="rounded-3xl bg-slate-800/70 p-4">
-      <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Target size={16} className="text-indigo-300" /> <span className="capitalize">{monthName}: στόχος &amp; πρόβλεψη</span></h3>
+      <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Target size={16} className="text-indigo-300" /> <span className="capitalize">{tr('{0}: στόχος & πρόβλεψη', monthName)}</span></h3>
       {goal > 0 ? (
         <>
           <div className="mb-1 flex justify-between text-sm">
-            <span className="text-fg">{money(f.earned)} <span className="text-slate-400">από {money(goal)}</span></span>
+            <span className="text-fg">{money(f.earned)} <span className="text-slate-400">{tr('από {0}', money(goal))}</span></span>
             <span className="font-semibold text-indigo-300">{Math.round(pct)}%</span>
           </div>
           <div className="h-2.5 overflow-hidden rounded-full bg-slate-700">
             <div className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-emerald-400' : 'bg-gradient-to-r from-indigo-500 to-violet-500'}`} style={{ width: `${pct}%` }} />
           </div>
           <p className="mt-2 text-sm text-slate-300">
-            {missing === 0 ? 'Ο στόχος επιτεύχθηκε 🎉' : <>Χρειάζεσαι ακόμα <b className="text-fg">{money(missing)}</b> (~{lessonsNeeded} μαθήματα).</>}
+            {missing === 0 ? tr('Ο στόχος επιτεύχθηκε 🎉') : <>{tr('Χρειάζεσαι ακόμα')} <b className="text-fg">{money(missing)}</b> {tr('(~{0} μαθήματα).', lessonsNeeded)}</>}
           </p>
         </>
       ) : (
-        <p className="mb-2 text-sm text-slate-400">Έσοδα μήνα μέχρι τώρα: <b className="text-fg">{money(f.earned)}</b>. Όρισε στόχο στις Ρυθμίσεις για μπάρα προόδου.</p>
+        <p className="mb-2 text-sm text-slate-400">{tr('Έσοδα μήνα μέχρι τώρα:')} <b className="text-fg">{money(f.earned)}</b>{tr('. Όρισε στόχο στις Ρυθμίσεις για μπάρα προόδου.')}</p>
       )}
       {!f.isPast && (
         <div className="mt-3 rounded-2xl bg-slate-900 p-3 text-sm">
-          <p className="mb-1.5 flex items-center gap-1.5 text-[11px] text-slate-400"><GraduationCap size={12} /> Πρόβλεψη τέλους μήνα</p>
+          <p className="mb-1.5 flex items-center gap-1.5 text-[11px] text-slate-400"><GraduationCap size={12} /> {tr('Πρόβλεψη τέλους μήνα')}</p>
           <p className="text-xl font-bold text-fg">{money(f.total)}</p>
-          <p className="mt-1 text-[11px] text-slate-400">
-            Έχουν μπει {money(f.earned)} + προγραμματισμένα {money(f.scheduled)} + πάγιο πρόγραμμα {money(f.projected)}{f.recurring > 0 ? ` + πάγια έσοδα ${money(f.recurring)}` : ''}.
-          </p>
-          {goal > 0 && <p className={`mt-1 text-xs font-medium ${reach ? 'text-emerald-400' : 'text-amber-400'}`}>{reach ? 'Με αυτό το πρόγραμμα φτάνεις τον στόχο.' : `Λείπουν ${money(goal - f.total)} από τον στόχο.`}</p>}
+          <p className="mt-1 text-[11px] text-slate-400">{tr('Έχουν μπει {0} + προγραμματισμένα {1} + πάγιο πρόγραμμα {2}{3}.', money(f.earned), money(f.scheduled), money(f.projected), f.recurring > 0 ? tr(' + πάγια έσοδα {0}', money(f.recurring)) : '')}</p>
+          {goal > 0 && <p className={`mt-1 text-xs font-medium ${reach ? 'text-emerald-400' : 'text-amber-400'}`}>{reach ? tr('Με αυτό το πρόγραμμα φτάνεις τον στόχο.') : tr('Λείπουν {0} από τον στόχο.', money(goal - f.total))}</p>}
         </div>
       )}
     </div>

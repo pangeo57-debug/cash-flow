@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Sheet } from './Sheet'
 import { categoriesFor } from '../constants'
 import type { TxType } from '../types'
+import { tr } from '../i18n'
 
 interface Props {
   type: TxType
@@ -20,7 +21,7 @@ export function TransactionSheet({ type, initial, onSave, onClose }: Props) {
   const valid = Number.isFinite(value) && value > 0
 
   return (
-    <Sheet title={initial ? (isIncome ? 'Επεξεργασία εσόδου' : 'Επεξεργασία εξόδου') : isIncome ? 'Νέο έσοδο' : 'Νέο έξοδο'} onClose={onClose}>
+    <Sheet title={initial ? (isIncome ? tr('Επεξεργασία εσόδου') : tr('Επεξεργασία εξόδου')) : isIncome ? tr('Νέο έσοδο') : tr('Νέο έξοδο')} onClose={onClose}>
       <div className="relative mb-4">
         <input
           autoFocus={!initial}
@@ -53,7 +54,7 @@ export function TransactionSheet({ type, initial, onSave, onClose }: Props) {
       </div>
 
       <input
-        placeholder="Περιγραφή (προαιρετικά)"
+        placeholder={tr('Περιγραφή (προαιρετικά)')}
         value={note}
         onChange={(e) => setNote(e.target.value)}
         className="mb-4 w-full rounded-2xl bg-slate-800 px-4 py-3 outline-none ring-2 ring-transparent placeholder:text-slate-500 focus:ring-indigo-500"
@@ -63,9 +64,7 @@ export function TransactionSheet({ type, initial, onSave, onClose }: Props) {
         disabled={!valid}
         onClick={() => onSave({ category, amount: Math.round(value * 100) / 100, note: note.trim() })}
         className={`w-full rounded-2xl py-3.5 text-base font-semibold text-fg transition active:scale-[.98] disabled:opacity-40 ${isIncome ? 'bg-emerald-500' : 'bg-rose-500'}`}
-      >
-        Αποθήκευση
-      </button>
+      >{tr('Αποθήκευση')}</button>
     </Sheet>
   )
 }

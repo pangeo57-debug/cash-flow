@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Sheet } from './Sheet'
 import type { Lesson } from '../types'
+import { tr } from '../i18n'
 
 interface Props {
   lesson?: Lesson
@@ -24,34 +25,31 @@ export function LessonSheet({ lesson, date, defaultFee, onSave, onDelete, onClos
   const field = 'w-full rounded-2xl bg-slate-800 px-4 py-3 outline-none ring-2 ring-transparent focus:ring-indigo-500 placeholder:text-slate-500'
 
   return (
-    <Sheet title={lesson ? 'Επεξεργασία μαθήματος' : 'Νέο μάθημα'} onClose={onClose}>
+    <Sheet title={lesson ? tr('Επεξεργασία μαθήματος') : tr('Νέο μάθημα')} onClose={onClose}>
       <div className="space-y-3">
-        <input autoFocus placeholder="Μαθητής / Τμήμα" value={student} onChange={(e) => setStudent(e.target.value)} className={field} />
+        <input autoFocus placeholder={tr('Μαθητής / Τμήμα')} value={student} onChange={(e) => setStudent(e.target.value)} className={field} />
         <div className="grid grid-cols-2 gap-3">
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className={field} />
           <input type="date" value={day} onChange={(e) => setDay(e.target.value)} className={field} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="relative">
-            <input inputMode="decimal" placeholder="Αμοιβή" value={fee} onChange={(e) => setFee(e.target.value)} className={field} />
+            <input inputMode="decimal" placeholder={tr('Αμοιβή')} value={fee} onChange={(e) => setFee(e.target.value)} className={field} />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">€</span>
           </div>
           <div className="relative">
-            <input inputMode="numeric" placeholder="Διάρκεια" value={dur} onChange={(e) => setDur(e.target.value)} className={field} />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">λεπτά</span>
+            <input inputMode="numeric" placeholder={tr('Διάρκεια')} value={dur} onChange={(e) => setDur(e.target.value)} className={field} />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">{tr('λεπτά')}</span>
           </div>
         </div>
         <button
           disabled={!valid}
           onClick={() => onSave({ id: lesson?.id, date: day, time, student: student.trim(), fee: feeNum, duration: durNum })}
           className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 py-3.5 font-semibold text-white active:scale-[.98] disabled:opacity-40"
-        >
-          Αποθήκευση
-        </button>
+        >{tr('Αποθήκευση')}</button>
         {onDelete && (
           <button onClick={onDelete} className="flex w-full items-center justify-center gap-2 py-2 text-sm text-rose-400">
-            <Trash2 size={16} /> Διαγραφή μαθήματος
-          </button>
+            <Trash2 size={16} /> {tr('Διαγραφή μαθήματος')}</button>
         )}
       </div>
     </Sheet>

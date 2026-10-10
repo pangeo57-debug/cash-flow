@@ -1,3 +1,4 @@
+import { locale, tr } from '../i18n'
 export const toISO = (d: Date): string => {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
@@ -20,16 +21,29 @@ export const addDays = (iso: string, n: number): string => {
 // Monday-based weekday index: Mon=0 … Sun=6
 export const weekdayIndex = (iso: string): number => (parseISO(iso).getDay() + 6) % 7
 
-export const WEEKDAYS_SHORT = ['Δευ', 'Τρι', 'Τετ', 'Πεμ', 'Παρ', 'Σαβ', 'Κυρ']
+const wdCache = new Map<string, string[]>()
+/** Mon..Sun abbreviations in the current language. */
+export function weekdaysShort(): string[] {
+  const loc = locale()
+  let v = wdCache.get(loc)
+  if (!v) {
+    v = Array.from({ length: 7 }, (_, i) => {
+      const w = new Date(2024, 0, 1 + i).toLocaleDateString(loc, { weekday: 'short' }).replace(/\.$/, '')
+      return w.charAt(0).toUpperCase() + w.slice(1)
+    })
+    wdCache.set(loc, v)
+  }
+  return v
+}
 
 export type Period = 'day' | 'week' | 'fortnight' | 'month'
 
-export const PERIOD_LABELS: Record<Period, string> = {
-  day: 'Ημέρα',
-  week: 'Εβδομάδα',
-  fortnight: '15ήμερο',
-  month: 'Μήνας',
-}
+export const periodLabels = (): Record<Period, string> => ({
+  day: tr('Ημέρα'),
+  week: tr('Εβδομάδα'),
+  fortnight: tr('15ήμερο'),
+  month: tr('Μήνας'),
+})
 
 export function periodRange(period: Period, anchor: string): { from: string; to: string } {
   const d = parseISO(anchor)
@@ -53,10 +67,18 @@ export function periodRange(period: Period, anchor: string): { from: string; to:
 }
 
 export const formatLong = (iso: string) =>
-  parseISO(iso).toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' })
+  parseISO(iso).toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })
 
 export const formatShort = (iso: string) =>
-  parseISO(iso).toLocaleDateString('el-GR', { day: 'numeric', month: 'short' })
+  parseISO(iso).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })
 
-const eur = new Intl.NumberFormat('el-GR', { style: 'currency', currency: 'EUR' })
-export const money = (n: number) => eur.format(n)
+const eurCache = new Map<string, Intl.NumberFormat>()
+export const money = (n: number) => {
+  const loc = locale()
+  let f = eurCache.get(loc)
+  if (!f) {
+    f = new Intl.NumberFormat(loc, { style: 'currency', currency: 'EUR' })
+    eurCache.set(loc, f)
+  }
+  return f.format(n)
+}

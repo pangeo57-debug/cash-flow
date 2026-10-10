@@ -6,6 +6,7 @@ import { guessCategory, norm } from './lib/autocat'
 import { parseInbox, type InboxEntry } from './lib/inbox'
 import { repository } from './storage/repository'
 import { LESSON_CATEGORY } from './constants'
+import { tr } from './i18n'
 
 const TOMB_CAP = 5000
 
@@ -34,14 +35,14 @@ export function useAppData() {
       setData(d)
       setReady(true)
     }).catch((error: unknown) => {
-      setStorageError(error instanceof Error ? error.message : 'Αποτυχία ανάγνωσης αποθηκευμένων δεδομένων.')
+      setStorageError(error instanceof Error ? error.message : tr('Αποτυχία ανάγνωσης αποθηκευμένων δεδομένων.'))
       setReady(true)
     })
   }, [])
 
   useEffect(() => {
     if (loaded.current) void repository.save(data).then(() => setStorageError(null)).catch((error: unknown) => {
-      setStorageError(error instanceof Error ? `Δεν αποθηκεύτηκαν οι αλλαγές: ${error.message}` : 'Δεν αποθηκεύτηκαν οι αλλαγές. Κατέβασε αντίγραφο ασφαλείας.')
+      setStorageError(error instanceof Error ? tr('Δεν αποθηκεύτηκαν οι αλλαγές: {0}', error.message) : tr('Δεν αποθηκεύτηκαν οι αλλαγές. Κατέβασε αντίγραφο ασφαλείας.'))
     })
   }, [data])
 

@@ -1,7 +1,8 @@
 import type { AppData, Transaction } from '../types'
-import { EATING_OUT_CATEGORIES, TRANSPORT_CATEGORIES, findCategory } from '../constants'
-import { addDays, periodRange, toISO, weekdayIndex, WEEKDAYS_SHORT, money } from './dates'
+import { EATING_OUT_CATEGORIES, TRANSPORT_CATEGORIES, catLabel, findCategory } from '../constants'
+import { addDays, periodRange, toISO, weekdayIndex, weekdaysShort, money } from './dates'
 import { holidayName } from './holidays'
+import { locale, tr } from '../i18n'
 
 export interface StudentStat {
   name: string
@@ -52,14 +53,14 @@ export function summarize(data: AppData, from: string, to: string): Summary {
   const byCat = new Map<string, number>()
   const incCat = new Map<string, number>()
   let fixedExpense = 0
-  const weekdays = WEEKDAYS_SHORT.map((day) => ({ day, income: 0, expense: 0 }))
+  const weekdays = weekdaysShort().map((day) => ({ day, income: 0, expense: 0 }))
   let income = 0
   let expense = 0
   let incomeCount = 0
   let expenseCount = 0
   const days = new Map<string, { date: string; label: string; income: number; expense: number; cum: number }>()
   for (let d = from, n = 0; d <= to && n < 62; d = addDays(d, 1), n++) {
-    days.set(d, { date: d, label: from.slice(0, 7) === to.slice(0, 7) ? String(Number(d.slice(8))) : WEEKDAYS_SHORT[weekdayIndex(d)], income: 0, expense: 0, cum: 0 })
+    days.set(d, { date: d, label: from.slice(0, 7) === to.slice(0, 7) ? String(Number(d.slice(8))) : weekdaysShort()[weekdayIndex(d)], income: 0, expense: 0, cum: 0 })
   }
 
   for (const t of data.transactions) {
@@ -101,7 +102,7 @@ export function summarize(data: AppData, from: string, to: string): Summary {
   const lessonIncome = doneLessons.reduce((a, l) => a + l.fee, 0)
   const transportTotal = [...byCat.entries()].filter(([c]) => TRANSPORT_CATEGORIES.includes(c)).reduce((a, [, v]) => a + v, 0)
   const hours = doneLessons.reduce((a, l) => a + (l.duration ?? 60) / 60, 0)
-  const lessonWeekday = WEEKDAYS_SHORT.map((day) => ({ day, income: 0 }))
+  const lessonWeekday = weekdaysShort().map((day) => ({ day, income: 0 }))
   const hourMap = new Map<number, number>()
   for (const l of doneLessons) {
     lessonWeekday[weekdayIndex(l.date)].income += l.fee
@@ -159,13 +160,13 @@ const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / who
 
 export function buildInsights(s: Summary): Insight[] {
   const out: Insight[] = []
-  if (s.income === 0 && s.expense === 0) return [{ tone: 'info', text: 'Δεν υπάρχουν κινήσεις στην περίοδο. Πρόσθεσε έσοδα/έξοδα για να δεις insights.' }]
+  if (s.income === 0 && s.expense === 0) return [{ tone: 'info', text: tr('Δεν υπάρχουν κινήσεις στην περίοδο. Πρόσθεσε έσοδα/έξοδα για να δεις insights.') }]
 
   const top = s.byCategory[0]
   if (top) {
     out.push({
       tone: 'info',
-      text: `Τα περισσότερα χρήματα πάνε σε «${top.name}»: ${money(top.value)} (${pct(top.value, s.expense)}% των εξόδων).`,
+      text: tr('Τα περισσότερα χρήματα πάνε σε «{0}»: {1} ({2}% των εξόδων).', catLabel(top.name), money(top.value), pct(top.value, s.expense)),
     })
   }
 
@@ -176,33 +177,33 @@ export function buildInsights(s: Summary): Insight[] {
     const p = pct(transport, s.income)
     out.push({
       tone: p >= 15 ? 'warn' : 'info',
-      text: `Τα καύσιμα/διόδια/μετακινήσεις απορροφούν το ${p}% των εσόδων σου (${money(transport)}).${p >= 15 ? ' Δοκίμασε να ομαδοποιείς μαθήματα στην ίδια περιοχή.' : ''}`,
+      text: tr('Τα καύσιμα/διόδια/μετακινήσεις απορροφούν το {0}% των εσόδων σου ({1}).{2}', p, money(transport), p >= 15 ? tr(' Δοκίμασε να ομαδοποιείς μαθήματα στην ίδια περιοχή.') : ''),
     })
   }
 
   const eating = sum(EATING_OUT_CATEGORIES)
   if (eating > 0 && s.income > 0 && pct(eating, s.income) >= 10) {
-    out.push({ tone: 'warn', text: `Φαγητό και καφές κοστίζουν ${money(eating)} (${pct(eating, s.income)}% των εσόδων). Εδώ υπάρχει περιθώριο περικοπής.` })
+    out.push({ tone: 'warn', text: tr('Φαγητό και καφές κοστίζουν {0} ({1}% των εσόδων). Εδώ υπάρχει περιθώριο περικοπής.', money(eating), pct(eating, s.income)) })
   }
 
   const misc = sum(['Κουλουλού'])
   if (misc > 0 && pct(misc, s.expense) >= 15) {
-    out.push({ tone: 'warn', text: `Τα «Κουλουλού» είναι το ${pct(misc, s.expense)}% των εξόδων. Δες αν κάποια ανήκουν σε συγκεκριμένη κατηγορία.` })
+    out.push({ tone: 'warn', text: tr('Τα «Κουλουλού» είναι το {0}% των εξόδων. Δες αν κάποια ανήκουν σε συγκεκριμένη κατηγορία.', pct(misc, s.expense)) })
   }
 
   if (s.lostIncome > 0) {
-    out.push({ tone: 'warn', text: `${s.cancelledCount} ακυρωμένα μαθήματα = ${money(s.lostIncome)} χαμένα έσοδα.` })
+    out.push({ tone: 'warn', text: tr('{0} ακυρωμένα μαθήματα = {1} χαμένα έσοδα.', s.cancelledCount, money(s.lostIncome)) })
   }
 
   if (s.income > 0) {
     const rate = pct(s.net, s.income)
     out.push(
       s.net >= 0
-        ? { tone: 'good', text: `Κρατάς το ${rate}% των εσόδων σου (${money(s.net)} καθαρό).` }
-        : { tone: 'warn', text: `Τα έξοδα ξεπερνούν τα έσοδα κατά ${money(-s.net)}.` },
+        ? { tone: 'good', text: tr('Κρατάς το {0}% των εσόδων σου ({1} καθαρό).', rate, money(s.net)) }
+        : { tone: 'warn', text: tr('Τα έξοδα ξεπερνούν τα έσοδα κατά {0}.', money(-s.net)) },
     )
   } else if (s.expense > 0) {
-    out.push({ tone: 'warn', text: 'Έξοδα χωρίς έσοδα στην περίοδο.' })
+    out.push({ tone: 'warn', text: tr('Έξοδα χωρίς έσοδα στην περίοδο.') })
   }
 
   return out
@@ -258,12 +259,12 @@ const parseDay = (iso: string) => new Date(iso + 'T00:00').getTime()
 
 export type RangeKey = '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'
 export const RANGES: { key: RangeKey; label: string; days: number | null }[] = [
-  { key: '1W', label: '1Ε', days: 7 },
-  { key: '1M', label: '1Μ', days: 30 },
-  { key: '3M', label: '3Μ', days: 90 },
-  { key: '6M', label: '6Μ', days: 182 },
-  { key: '1Y', label: '1Χ', days: 365 },
-  { key: 'ALL', label: 'Όλα', days: null },
+  { key: '1W', get label() { return tr('1Ε') }, days: 7 },
+  { key: '1M', get label() { return tr('1Μ') }, days: 30 },
+  { key: '3M', get label() { return tr('3Μ') }, days: 90 },
+  { key: '6M', get label() { return tr('6Μ') }, days: 182 },
+  { key: '1Y', get label() { return tr('1Χ') }, days: 365 },
+  { key: 'ALL', get label() { return tr('Όλα') }, days: null },
 ]
 
 export interface Overall {
@@ -332,7 +333,7 @@ export function overall(data: AppData, days: number | null, today: string): Over
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(-12)
     .map(([k, m]) => ({
-      label: new Date(Number(k.slice(0, 4)), Number(k.slice(5)) - 1, 1).toLocaleDateString('el-GR', { month: 'short', year: '2-digit' }),
+      label: new Date(Number(k.slice(0, 4)), Number(k.slice(5)) - 1, 1).toLocaleDateString(locale(), { month: 'short', year: '2-digit' }),
       income: m.income,
       expense: m.expense,
       net: m.income - m.expense,
@@ -410,7 +411,7 @@ function lastMonths(today: string, n: number) {
   return Array.from({ length: n }, (_, i) => {
     const d = new Date(y, m - (n - 1 - i), 1)
     const key = toISO(d).slice(0, 7)
-    return { key, label: d.toLocaleDateString('el-GR', { month: 'short' }) }
+    return { key, label: d.toLocaleDateString(locale(), { month: 'short' }) }
   })
 }
 

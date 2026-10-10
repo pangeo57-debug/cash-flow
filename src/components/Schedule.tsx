@@ -1,6 +1,7 @@
 import { Ban, CheckCircle2, Pencil, Plus, RotateCcw } from 'lucide-react'
 import type { Lesson } from '../types'
 import { money } from '../lib/dates'
+import { tr } from '../i18n'
 
 interface Props {
   lessons: Lesson[]
@@ -14,14 +15,13 @@ export function Schedule({ lessons, onAdd, onEdit, onStatus }: Props) {
   return (
     <section>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-fg">Πρόγραμμα</h2>
+        <h2 className="text-base font-semibold text-fg">{tr('Πρόγραμμα')}</h2>
         <button onClick={onAdd} className="flex items-center gap-1 rounded-full bg-indigo-500/20 px-3 py-1.5 text-sm text-indigo-300 active:scale-95">
-          <Plus size={16} /> Έξτρα μάθημα
-        </button>
+          <Plus size={16} /> {tr('Έξτρα μάθημα')}</button>
       </div>
 
       {sorted.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-fg/10 py-6 text-center text-sm text-slate-500">Κανένα μάθημα σήμερα</p>
+        <p className="rounded-2xl border border-dashed border-fg/10 py-6 text-center text-sm text-slate-500">{tr('Κανένα μάθημα σήμερα')}</p>
       )}
 
       <ol className="relative space-y-3 border-l border-fg/10 pl-4">
@@ -39,7 +39,7 @@ export function Schedule({ lessons, onAdd, onEdit, onStatus }: Props) {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-emerald-300">{money(l.fee)}</span>
-                    <button onClick={() => onEdit(l)} aria-label="Επεξεργασία" className="rounded-full bg-fg/5 p-1.5 text-slate-400 active:scale-95">
+                    <button onClick={() => onEdit(l)} aria-label={tr('Επεξεργασία')} className="rounded-full bg-fg/5 p-1.5 text-slate-400 active:scale-95">
                       <Pencil size={14} />
                     </button>
                   </div>
@@ -49,15 +49,13 @@ export function Schedule({ lessons, onAdd, onEdit, onStatus }: Props) {
                   {l.status === 'scheduled' ? (
                     <>
                       <button onClick={() => onStatus(l.id, 'done')} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-2 text-sm font-semibold text-white active:scale-95">
-                        <CheckCircle2 size={16} /> Ολοκλήρωση / Πληρώθηκε
-                      </button>
+                        <CheckCircle2 size={16} /> {tr('Ολοκλήρωση / Πληρώθηκε')}</button>
                       <button onClick={() => onStatus(l.id, 'cancelled')} className="flex items-center gap-1 rounded-xl bg-slate-700 px-3 py-2 text-sm text-rose-300 active:scale-95">
-                        <Ban size={16} /> Ακύρωση
-                      </button>
+                        <Ban size={16} /> {tr('Ακύρωση')}</button>
                     </>
                   ) : (
                     <button onClick={() => onStatus(l.id, 'scheduled')} className="flex items-center gap-1.5 rounded-xl bg-slate-700 px-3 py-2 text-sm text-slate-200 active:scale-95">
-                      <RotateCcw size={14} /> {done ? 'Αναίρεση πληρωμής' : 'Επαναφορά'}
+                      <RotateCcw size={14} /> {done ? tr('Αναίρεση πληρωμής') : tr('Επαναφορά')}
                     </button>
                   )}
                 </div>

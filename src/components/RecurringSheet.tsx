@@ -4,6 +4,7 @@ import { Sheet } from './Sheet'
 import { categoriesFor } from '../constants'
 import { todayISO } from '../lib/dates'
 import type { RecurringTx, TxType } from '../types'
+import { tr } from '../i18n'
 
 interface Props {
   item?: RecurringTx
@@ -31,17 +32,17 @@ export function RecurringSheet({ item, onSave, onDelete, onClose }: Props) {
   }
 
   return (
-    <Sheet title={item ? 'Πάγια κίνηση' : 'Νέα πάγια κίνηση'} onClose={onClose}>
-      <p className="mb-3 text-sm text-slate-400">Καταγράφεται αυτόματα κάθε μήνα την ημέρα που ορίζεις.</p>
+    <Sheet title={item ? tr('Πάγια κίνηση') : tr('Νέα πάγια κίνηση')} onClose={onClose}>
+      <p className="mb-3 text-sm text-slate-400">{tr('Καταγράφεται αυτόματα κάθε μήνα την ημέρα που ορίζεις.')}</p>
       <div className="mb-3 grid grid-cols-2 gap-1 rounded-2xl bg-slate-800 p-1">
         {(['income', 'expense'] as const).map((t) => (
           <button key={t} onClick={() => switchType(t)} className={`rounded-xl py-2 text-sm font-medium ${type === t ? (t === 'income' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white') : 'text-slate-400'}`}>
-            {t === 'income' ? 'Έσοδο' : 'Έξοδο'}
+            {t === 'income' ? tr('Έσοδο') : tr('Έξοδο')}
           </button>
         ))}
       </div>
       <div className="relative mb-3">
-        <input inputMode="decimal" placeholder="Ποσό" value={amount} onChange={(e) => setAmount(e.target.value)} className={field} />
+        <input inputMode="decimal" placeholder={tr('Ποσό')} value={amount} onChange={(e) => setAmount(e.target.value)} className={field} />
         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">€</span>
       </div>
       <div className="mb-3 grid grid-cols-3 gap-2">
@@ -55,22 +56,17 @@ export function RecurringSheet({ item, onSave, onDelete, onClose }: Props) {
           )
         })}
       </div>
-      <input placeholder="Περιγραφή (π.χ. ΔΥΠΑ)" value={note} onChange={(e) => setNote(e.target.value)} className={`${field} mb-3`} />
+      <input placeholder={tr('Περιγραφή (π.χ. ΔΥΠΑ)')} value={note} onChange={(e) => setNote(e.target.value)} className={`${field} mb-3`} />
       <div className="mb-4 grid grid-cols-2 gap-3">
-        <label className="text-xs text-slate-400">Ημέρα του μήνα
-          <input inputMode="numeric" value={day} onChange={(e) => setDay(e.target.value)} className={`${field} mt-1`} />
+        <label className="text-xs text-slate-400">{tr('Ημέρα του μήνα')}<input inputMode="numeric" value={day} onChange={(e) => setDay(e.target.value)} className={`${field} mt-1`} />
         </label>
-        <label className="text-xs text-slate-400">Ξεκινά από
-          <input type="date" value={start} onChange={(e) => setStart(e.target.value)} className={`${field} mt-1`} />
+        <label className="text-xs text-slate-400">{tr('Ξεκινά από')}<input type="date" value={start} onChange={(e) => setStart(e.target.value)} className={`${field} mt-1`} />
         </label>
       </div>
-      <button disabled={!valid} onClick={() => onSave({ id: item?.id, type, category, amount: Math.round(value * 100) / 100, note: note.trim(), dayOfMonth: dayNum, startDate: start })} className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 py-3.5 font-semibold text-white active:scale-[.98] disabled:opacity-40">
-        Αποθήκευση
-      </button>
+      <button disabled={!valid} onClick={() => onSave({ id: item?.id, type, category, amount: Math.round(value * 100) / 100, note: note.trim(), dayOfMonth: dayNum, startDate: start })} className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 py-3.5 font-semibold text-white active:scale-[.98] disabled:opacity-40">{tr('Αποθήκευση')}</button>
       {onDelete && (
         <button onClick={onDelete} className="mt-2 flex w-full items-center justify-center gap-2 py-2 text-sm text-rose-400">
-          <Trash2 size={16} /> Διαγραφή (οι ήδη καταγεγραμμένες μένουν)
-        </button>
+          <Trash2 size={16} /> {tr('Διαγραφή (οι ήδη καταγεγραμμένες μένουν)')}</button>
       )}
     </Sheet>
   )

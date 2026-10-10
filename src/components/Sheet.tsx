@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { tr } from '../i18n'
 
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   return (
@@ -9,7 +10,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
         <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-fg/20" />
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-fg">{title}</h2>
-          <button onClick={onClose} aria-label="Κλείσιμο" className="rounded-full bg-fg/10 p-2 text-slate-300 active:scale-95">
+          <button onClick={onClose} aria-label={tr('Κλείσιμο')} className="rounded-full bg-fg/10 p-2 text-slate-300 active:scale-95">
             <X size={18} />
           </button>
         </div>

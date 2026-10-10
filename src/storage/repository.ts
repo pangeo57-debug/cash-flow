@@ -1,4 +1,5 @@
 import { emptyData, type AppData, type Lesson, type RecurringTx, type Transaction, type WeeklySlot } from '../types'
+import { tr } from '../i18n'
 
 export interface Repository {
   load(): Promise<AppData>
@@ -70,23 +71,23 @@ export function normalize(parsed: Partial<AppData> | unknown): AppData {
 /** Strict validation for user-requested restore; never silently drop backup records. */
 export function validateBackup(parsed: unknown): AppData {
   if (!isObject(parsed) || !(Array.isArray(parsed.transactions) || Array.isArray(parsed.lessons))) {
-    throw new Error('Το αρχείο δεν μοιάζει με αντίγραφο Cash Flow.')
+    throw new Error(tr('Το αρχείο δεν μοιάζει με αντίγραφο Cash Flow.'))
   }
   const checks: [string, unknown, (v: unknown) => boolean][] = [
-    ['συναλλαγές', parsed.transactions, transaction],
-    ['μαθήματα', parsed.lessons, lesson],
-    ['εβδομαδιαίο πρόγραμμα', parsed.weeklySlots, slot],
-    ['επαναλαμβανόμενες κινήσεις', parsed.recurring, recurring],
+    [tr('συναλλαγές'), parsed.transactions, transaction],
+    [tr('μαθήματα'), parsed.lessons, lesson],
+    [tr('εβδομαδιαίο πρόγραμμα'), parsed.weeklySlots, slot],
+    [tr('επαναλαμβανόμενες κινήσεις'), parsed.recurring, recurring],
   ]
   for (const [label, value, isValid] of checks) {
     if (value !== undefined && (!Array.isArray(value) || !value.every(isValid))) {
-      throw new Error(`Το αντίγραφο περιέχει μη έγκυρα στοιχεία (${label}).`)
+      throw new Error(tr('Το αντίγραφο περιέχει μη έγκυρα στοιχεία ({0}).', label))
     }
   }
   for (const key of ['skips', 'imported', 'tombstones']) {
     const value = parsed[key]
     if (value !== undefined && (!Array.isArray(value) || !value.every((item) => typeof item === 'string'))) {
-      throw new Error(`Το αντίγραφο περιέχει μη έγκυρα στοιχεία (${key}).`)
+      throw new Error(tr('Το αντίγραφο περιέχει μη έγκυρα στοιχεία ({0}).', key))
     }
   }
   return normalize(parsed)
@@ -100,7 +101,7 @@ export class LocalStorageRepository implements Repository {
       return validateBackup(JSON.parse(raw))
     } catch (error) {
       // Do not silently overwrite a corrupt backup; keep it available for recovery.
-      throw new Error(`Τα αποθηκευμένα δεδομένα δεν διαβάζονται: ${error instanceof Error ? error.message : 'άγνωστο σφάλμα'}`)
+      throw new Error(tr('Τα αποθηκευμένα δεδομένα δεν διαβάζονται: {0}', error instanceof Error ? error.message : tr('άγνωστο σφάλμα')))
     }
   }
 

@@ -1,12 +1,13 @@
 import type { AppData } from '../types'
 import { findCategory } from '../constants'
+import { getLang, tr } from '../i18n'
 
 // Excel in Greek locale expects ';' as separator and ',' as decimal mark; the BOM keeps the Greek letters intact.
-const num = (n: number) => n.toFixed(2).replace('.', ',')
+const num = (n: number) => (getLang() === 'en' ? n.toFixed(2) : n.toFixed(2).replace('.', ','))
 const cell = (v: string) => `"${v.replace(/"/g, '""')}"`
 
 function download(name: string, rows: string[][]) {
-  const csv = '﻿' + rows.map((r) => r.map(cell).join(';')).join('\r\n')
+  const csv = '﻿' + rows.map((r) => r.map(cell).join(getLang() === 'en' ? ',' : ';')).join('\r\n')
   const a = document.createElement('a')
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
   a.download = name
@@ -15,9 +16,9 @@ function download(name: string, rows: string[][]) {
 }
 
 export function exportTransactions(data: AppData) {
-  const rows = [['Ημερομηνία', 'Τύπος', 'Κατηγορία', 'Ποσό', 'Περιγραφή', 'Αυτόματη']]
+  const rows = [[tr('Ημερομηνία'), tr('Τύπος'), tr('Κατηγορία'), tr('Ποσό'), tr('Περιγραφή'), tr('Αυτόματη')]]
   for (const t of [...data.transactions].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt)) {
-    rows.push([t.date, t.type === 'income' ? 'Έσοδο' : 'Έξοδο', findCategory(t.category).label, num(t.amount), t.note, t.source === 'auto' ? 'ναι' : ''])
+    rows.push([t.date, t.type === 'income' ? tr('Έσοδο') : tr('Έξοδο'), findCategory(t.category).label, num(t.amount), t.note, t.source === 'auto' ? tr('ναι') : ''])
   }
   download('cashflow-kiniseis.csv', rows)
 }
@@ -31,7 +32,7 @@ export function exportMonthly(data: AppData) {
     else v.e += t.amount
     m.set(k, v)
   }
-  const rows = [['Μήνας', 'Έσοδα', 'Έξοδα', 'Καθαρό']]
+  const rows = [[tr('Μήνας'), tr('Έσοδα'), tr('Έξοδα'), tr('Καθαρό')]]
   for (const [k, v] of [...m.entries()].sort(([a], [b]) => a.localeCompare(b))) rows.push([k, num(v.i), num(v.e), num(v.i - v.e)])
   download('cashflow-minaia-synopsi.csv', rows)
 }

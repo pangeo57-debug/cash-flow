@@ -1,4 +1,5 @@
 import { toISO } from './dates'
+import { getLang, tr } from '../i18n'
 
 export interface Region {
   id: string
@@ -31,7 +32,7 @@ export function orthodoxEaster(year: number): Date {
 const cache = new Map<string, Map<string, string>>()
 
 export function holidaysFor(year: number, regionId: string): Map<string, string> {
-  const key = `${year}|${regionId}`
+  const key = `${year}|${regionId}|${getLang()}`
   const hit = cache.get(key)
   if (hit) return hit
   const map = new Map<string, string>()
@@ -39,20 +40,20 @@ export function holidaysFor(year: number, regionId: string): Map<string, string>
   const easter = orthodoxEaster(year)
   const rel = (offset: number, name: string) => map.set(toISO(new Date(year, easter.getMonth(), easter.getDate() + offset)), name)
 
-  fixed(1, 1, 'Πρωτοχρονιά')
-  fixed(1, 6, 'Θεοφάνεια')
-  rel(-48, 'Καθαρά Δευτέρα')
-  fixed(3, 25, '25η Μαρτίου')
-  rel(-2, 'Μεγάλη Παρασκευή')
-  rel(0, 'Κυριακή του Πάσχα')
-  rel(1, 'Δευτέρα του Πάσχα')
-  fixed(5, 1, 'Εργατική Πρωτομαγιά')
-  rel(50, 'Αγίου Πνεύματος')
-  fixed(8, 15, 'Δεκαπενταύγουστος')
-  fixed(10, 28, '28η Οκτωβρίου')
-  fixed(12, 25, 'Χριστούγεννα')
-  fixed(12, 26, 'Σύναξη Θεοτόκου')
-  for (const l of REGIONS.find((r) => r.id === regionId)?.local ?? []) fixed(l.month, l.day, l.name)
+  fixed(1, 1, tr('Πρωτοχρονιά'))
+  fixed(1, 6, tr('Θεοφάνεια'))
+  rel(-48, tr('Καθαρά Δευτέρα'))
+  fixed(3, 25, tr('25η Μαρτίου'))
+  rel(-2, tr('Μεγάλη Παρασκευή'))
+  rel(0, tr('Κυριακή του Πάσχα'))
+  rel(1, tr('Δευτέρα του Πάσχα'))
+  fixed(5, 1, tr('Εργατική Πρωτομαγιά'))
+  rel(50, tr('Αγίου Πνεύματος'))
+  fixed(8, 15, tr('Δεκαπενταύγουστος'))
+  fixed(10, 28, tr('28η Οκτωβρίου'))
+  fixed(12, 25, tr('Χριστούγεννα'))
+  fixed(12, 26, tr('Σύναξη Θεοτόκου'))
+  for (const l of REGIONS.find((r) => r.id === regionId)?.local ?? []) fixed(l.month, l.day, tr(l.name))
 
   cache.set(key, map)
   return map
