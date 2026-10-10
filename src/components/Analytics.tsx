@@ -94,7 +94,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
         ))}
       </div>
 
-      {period === 'custom' && <RangePicker from={from} to={to} onChange={(f, t) => { setCat(null); setCustom({ from: f, to: t }) }} />}
+      <RangePicker from={from} to={to} onChange={(f, t) => { setCat(null); setCustom({ from: f, to: t }); setPeriod('custom') }} />
 
       <div className="flex items-center justify-between">
         <button onClick={() => move(-1)} aria-label={tr('Προηγούμενη')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronLeft size={18} /></button>

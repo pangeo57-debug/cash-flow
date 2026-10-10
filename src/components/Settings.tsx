@@ -426,6 +426,7 @@ export function Settings({ data, onSettings, onAdd, onEdit, onImport, onImportIn
       <AutoCapture onImportInbox={onImportInbox} />
       <Backup data={data} onImport={onImport} />
       </div>
+      <p className="text-center text-[11px] text-slate-500">Cash Flow · {__APP_VERSION__}</p>
     </div>
   )
 }

@@ -65,7 +65,7 @@ export function Overall({ data, isLight }: { data: AppData; isLight: boolean }) 
           </ResponsiveContainer>
         </div>
 
-        {range === 'CUSTOM' && <div className="mt-3"><RangePicker from={custom.from} to={custom.to} onChange={(f, t) => { setHover(null); setCustom({ from: f, to: t }) }} /></div>}
+        <div className="mt-3"><RangePicker from={o.series[0].date} to={o.series[o.series.length - 1].date} onChange={(f, t) => { setHover(null); setCustom({ from: f, to: t }); setRange('CUSTOM') }} /></div>
         <div className="mt-3 grid grid-cols-[repeat(6,minmax(0,1fr))_minmax(0,2fr)] gap-1 rounded-2xl bg-slate-900 p-1">
           {RANGES.map((r) => (
             <button key={r.key} onClick={() => { setRange(r.key); setHover(null) }} className={`rounded-xl py-1.5 text-[11px] font-semibold ${r.key === range ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>{r.label}</button>
