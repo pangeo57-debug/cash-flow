@@ -410,5 +410,12 @@ const dict: Record<string, string> = {
   'Δευ–Κυρ': 'Mo–So',
   '7 ημέρες από σήμερα': 'Nächste 7 Tage',
   'Διάστημα': 'Zeitraum',
+  'Επέλεξε ημερομηνίες': 'Daten wählen',
+  'Εφαρμογή': 'Anwenden',
+  'Αυτός ο μήνας': 'Dieser Monat',
+  'Προηγούμενος μήνας': 'Letzter Monat',
+  'Τελευταίες 7 ημέρες': 'Letzte 7 Tage',
+  'Τελευταίες 30 ημέρες': 'Letzte 30 Tage',
+  'Διάλεξε και την τελευταία ημέρα': 'Wähle jetzt den letzten Tag',
 }
 export default dict
