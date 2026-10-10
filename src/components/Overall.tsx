@@ -15,8 +15,8 @@ export function Overall({ data, isLight }: { data: AppData; isLight: boolean }) 
   const [range, setRange] = useState<RangeKey>('3M')
   const [custom, setCustom] = useState(() => ({ from: addDays(todayISO(), -29), to: todayISO() }))
   const [hover, setHover] = useState<number | null>(null)
-  const days = RANGES.find((r) => r.key === range)!.days
-  const o = useMemo(() => overall(data, days, todayISO(), range === 'CUSTOM' ? custom : undefined), [data, days, lang, range, custom])
+  const rangeStart = RANGES.find((r) => r.key === range)!.start?.(todayISO()) ?? null
+  const o = useMemo(() => overall(data, rangeStart, todayISO(), range === 'CUSTOM' ? custom : undefined), [data, rangeStart, lang, range, custom])
   const trend = useMemo(() => categoryTrend(data, todayISO()), [data, lang])
   const cancels = useMemo(() => cancelTrend(data, todayISO()), [data, lang])
   const vol = useMemo(() => volatility(data, todayISO()), [data])
@@ -31,8 +31,7 @@ export function Overall({ data, isLight }: { data: AppData; isLight: boolean }) 
   }
 
   const point = hover !== null ? o.series[hover] : o.series[o.series.length - 1]
-  const change = point.balance - o.startBalance
-  const pct = o.startBalance > 0 ? (change / o.startBalance) * 100 : null
+  const change = point.balance // cumulative profit from the start of the range up to this point
   const up = change >= 0
   const color = up ? '#34d399' : '#fb7185'
   const long = o.series.length > 120
@@ -41,12 +40,11 @@ export function Overall({ data, isLight }: { data: AppData; isLight: boolean }) 
   return (
     <div className="space-y-5">
       <div className="rounded-3xl bg-slate-800/70 p-4">
-        <p className="text-xs text-slate-400">{hover !== null ? formatShort(point.date) : tr('Συνολικό υπόλοιπο (έσοδα − έξοδα)')}</p>
-        <p className="mt-0.5 text-4xl font-bold tracking-tight text-fg">{money(point.balance)}</p>
+        <p className="text-xs text-slate-400">{hover !== null ? formatShort(point.date) : tr('Καθαρό κέρδος')}</p>
+        <p className={`mt-0.5 text-4xl font-bold tracking-tight ${up ? 'text-emerald-400' : 'text-rose-400'}`}>{fmtSigned(change)}</p>
         <p className={`mt-1 flex items-center gap-1 text-sm font-semibold ${up ? 'text-emerald-400' : 'text-rose-400'}`}>
           {up ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-          {fmtSigned(change)}{pct !== null ? ` (${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%)` : ''}
-          <span className="font-normal text-slate-400">· {range === 'ALL' ? tr('από την αρχή') : tr('στην περίοδο')}</span>
+          <span className="font-normal text-slate-400">{formatShort(o.series[0].date)} – {formatShort(o.series[o.series.length - 1].date)}</span>
         </p>
 
         <div className="mt-3 h-56 lg:h-72">
@@ -83,7 +81,6 @@ export function Overall({ data, isLight }: { data: AppData; isLight: boolean }) 
         {o.bestDay && <Tile label={tr('Καλύτερη ημέρα')} value={fmtSigned(o.bestDay.net)} sub={formatShort(o.bestDay.date)} cls="text-emerald-400" />}
         {o.worstDay && <Tile label={tr('Χειρότερη ημέρα')} value={fmtSigned(o.worstDay.net)} sub={formatShort(o.worstDay.date)} cls="text-rose-400" />}
         {o.bestMonth && <Tile label={tr('Καλύτερος μήνας')} value={fmtSigned(o.bestMonth.net)} sub={o.bestMonth.label} cls="text-emerald-400" />}
-        <Tile label={tr('Σύνολο μέχρι σήμερα')} value={money(o.totalToday)} cls="text-fg" />
         {o.runwayDays !== null && <Tile label={tr('Το υπόλοιπο φτάνει για')} value={tr('~{0} ημέρες', o.runwayDays)} sub={tr('με τον ρυθμό εξόδων 30 ημερών')} cls={o.runwayDays < 14 ? 'text-rose-400' : 'text-fg'} />}
       </div>
 

@@ -258,14 +258,25 @@ export function monthForecast(data: AppData, anchor: string, today: string): For
 const parseDay = (iso: string) => new Date(iso + 'T00:00').getTime()
 
 export type RangeKey = '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL' | 'CUSTOM'
-export const RANGES: { key: RangeKey; label: string; days: number | null }[] = [
-  { key: '1W', get label() { return tr('1Ε') }, days: 7 },
-  { key: '1M', get label() { return tr('1Μ') }, days: 30 },
-  { key: '3M', get label() { return tr('3Μ') }, days: 90 },
-  { key: '6M', get label() { return tr('6Μ') }, days: 182 },
-  { key: '1Y', get label() { return tr('1Χ') }, days: 365 },
-  { key: 'ALL', get label() { return tr('Όλα') }, days: null },
-  { key: 'CUSTOM', get label() { return tr('Διάστημα') }, days: null },
+/** `start(today)` returns the first day of the range (null = from the first transaction). Months count back by calendar. */
+const daysBack = (n: number) => (today: string) => addDays(today, -(n - 1))
+const monthsBack = (n: number) => (today: string) => {
+  const y = Number(today.slice(0, 4))
+  const m = Number(today.slice(5, 7)) - 1
+  const d = Number(today.slice(8))
+  const target = new Date(y, m - n, 1)
+  const last = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+  return toISO(new Date(target.getFullYear(), target.getMonth(), Math.min(d, last)))
+}
+
+export const RANGES: { key: RangeKey; label: string; start: ((today: string) => string) | null }[] = [
+  { key: '1W', get label() { return tr('1Ε') }, start: daysBack(7) },
+  { key: '1M', get label() { return tr('1Μ') }, start: monthsBack(1) },
+  { key: '3M', get label() { return tr('3Μ') }, start: monthsBack(3) },
+  { key: '6M', get label() { return tr('6Μ') }, start: monthsBack(6) },
+  { key: '1Y', get label() { return tr('1Χ') }, start: monthsBack(12) },
+  { key: 'ALL', get label() { return tr('Όλα') }, start: null },
+  { key: 'CUSTOM', get label() { return tr('Διάστημα') }, start: null },
 ]
 
 export interface Overall {
@@ -285,7 +296,8 @@ export interface Overall {
 }
 
 /** Stock-style view: cumulative balance (all income minus all expenses) over time. */
-export function overall(data: AppData, days: number | null, today: string, custom?: { from: string; to: string }): Overall {
+/** Profit view: cumulative net (income − expenses) inside the chosen range, starting from zero. */
+export function overall(data: AppData, rangeStart: string | null, today: string, custom?: { from: string; to: string }): Overall {
   const txs = data.transactions.filter((t) => t.date <= today)
   if (txs.length === 0) return { hasData: false, series: [], startBalance: 0, total: 0, totalToday: 0, income: 0, expense: 0, avgPerActiveDay: 0, runwayDays: null, months: [] }
 
@@ -303,12 +315,11 @@ export function overall(data: AppData, days: number | null, today: string, custo
     monthMap.set(mk, m)
   }
 
-  const start = custom ? custom.from : days === null || addDays(today, -(days - 1)) < first ? first : addDays(today, -(days - 1))
+  const start = custom ? custom.from : rangeStart === null || rangeStart < first ? first : rangeStart
   const end = custom ? (custom.to < today ? custom.to : today) : today
   let allBal = data.settings.openingBalance || 0
   for (const v of net.values()) allBal += v
-  let startBalance = data.settings.openingBalance || 0
-  for (const [d, v] of net) if (d < start) startBalance += v
+  const startBalance = 0 // profit is measured inside the range only, not as a running total
 
   const series: { date: string; balance: number }[] = []
   let bal = startBalance
