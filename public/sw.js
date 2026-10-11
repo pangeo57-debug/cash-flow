@@ -1,4 +1,4 @@
-const CACHE = 'cashflow-v3'
+const CACHE = 'cashflow-v4'
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './manifest.webmanifest', './icon-192.png'])))
@@ -10,21 +10,25 @@ self.addEventListener('activate', (e) => {
   self.clients.claim()
 })
 
-// Stale-while-revalidate: open instantly from cache, refresh in the background
-// (never blocks on a slow network; the next open gets the new version).
+// Pages (HTML) are network-first so a new deploy shows immediately; if the network is
+// slow (>3s) or offline, fall back to the cached copy. Hashed assets are cache-first.
 self.addEventListener('fetch', (e) => {
   const req = e.request
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return
+  const isPage = req.mode === 'navigate' || req.destination === 'document' || req.url.endsWith('/sw.js') || req.url.endsWith('.webmanifest')
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
-      const cached = (await cache.match(req)) || (req.mode === 'navigate' ? await cache.match('./') : undefined)
-      const network = fetch(req)
-        .then((res) => {
+      const cached = await cache.match(req)
+      const fresh = () =>
+        fetch(req, { cache: 'no-cache' }).then((res) => {
           if (res.ok) cache.put(req, res.clone())
           return res
         })
-        .catch(() => cached)
-      return cached || network
+      if (isPage) {
+        const fallback = cached || (await cache.match('./'))
+        return Promise.race([fresh(), new Promise((r) => setTimeout(() => r(fallback), 3000))]).then((r) => r || fresh()).catch(() => fallback)
+      }
+      return cached || fresh()
     }),
   )
 })
