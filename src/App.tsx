@@ -226,17 +226,17 @@ export default function App() {
       {tab === 'today' && (
         <div className="fab-row pointer-events-none fixed inset-x-4 z-30 lg:inset-x-auto lg:bottom-8 lg:left-60 lg:right-8">
           <div className="mx-auto flex max-w-lg justify-between lg:max-w-5xl lg:justify-end lg:gap-3">
-            <button onClick={() => setTxSheet('expense')} className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-rose-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-rose-950/40 active:scale-95">
+            <button onClick={() => setTxSheet('expense')} className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-rose-500 px-4 sm:px-6 py-3.5 font-semibold text-white shadow-lg shadow-rose-950/40 active:scale-95">
               <Minus size={18} /> {tr('Έξοδο')}</button>
-            <div className="flex items-center gap-2 self-center lg:order-first">
-              <button onClick={() => setQuickOpen(true)} aria-label={tr('Φωνητική καταγραφή')} className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-violet-500 text-white shadow-lg active:scale-95">
+            <div className="flex items-center gap-1.5 self-center lg:order-first">
+              <button onClick={() => setQuickOpen(true)} aria-label={tr('Φωνητική καταγραφή')} className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-violet-500 text-white shadow-lg active:scale-95">
                 <Mic size={20} />
               </button>
-            <button onClick={() => void pasteFromClipboard()} aria-label={tr('Καταγραφή από αντιγραμμένο μήνυμα')} className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500 text-white shadow-lg active:scale-95">
+            <button onClick={() => void pasteFromClipboard()} aria-label={tr('Καταγραφή από αντιγραμμένο μήνυμα')} className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-indigo-500 text-white shadow-lg active:scale-95">
               <ClipboardPaste size={20} />
             </button>
             </div>
-            <button onClick={() => setTxSheet('income')} className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-emerald-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-emerald-950/40 active:scale-95">
+            <button onClick={() => setTxSheet('income')} className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-emerald-500 px-4 sm:px-6 py-3.5 font-semibold text-white shadow-lg shadow-emerald-950/40 active:scale-95">
               <Plus size={18} /> {tr('Έσοδο')}</button>
           </div>
         </div>

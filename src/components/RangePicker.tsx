@@ -67,9 +67,9 @@ function Calendar({ from, to, maxDays, onClose, onApply }: { from: string; to: s
 
   return (
     <Sheet title={tr('Επέλεξε ημερομηνίες')} onClose={onClose}>
-      <div className="mb-2 flex flex-wrap gap-1.5">
+      <div className="-mx-5 mb-2 flex gap-1.5 overflow-x-auto px-5 pb-1">
         {presets.map(([label, f, t]) => (
-          <button key={label} onClick={() => preset(f, t)} className="rounded-full bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 active:scale-95">{label}</button>
+          <button key={label} onClick={() => preset(f, t)} className="shrink-0 whitespace-nowrap rounded-full bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 active:scale-95">{label}</button>
         ))}
       </div>
 
@@ -91,7 +91,7 @@ function Calendar({ from, to, maxDays, onClose, onApply }: { from: string; to: s
             <button
               key={d}
               onClick={() => pick(d)}
-              className={`my-0.5 h-10 text-sm active:scale-95 ${edge ? 'mx-auto w-10 rounded-full bg-indigo-500 font-semibold text-white' : inRange ? 'bg-indigo-500/20 text-fg' : d === today ? 'mx-auto w-10 rounded-full text-indigo-400 ring-1 ring-indigo-400/60' : 'rounded-full text-slate-200'}`}
+              className={`h-9 text-sm active:scale-95 ${edge ? 'mx-auto w-9 rounded-full bg-indigo-500 font-semibold text-white' : inRange ? 'bg-indigo-500/20 text-fg' : d === today ? 'mx-auto w-9 rounded-full text-indigo-400 ring-1 ring-indigo-400/60' : 'rounded-full text-slate-200'}`}
             >
               {Number(d.slice(8))}
             </button>
@@ -99,10 +99,10 @@ function Calendar({ from, to, maxDays, onClose, onApply }: { from: string; to: s
         })}
       </div>
 
-      <p className="mt-3 text-center text-xs text-slate-400">
+      <div className="sticky bottom-0 -mx-5 -mb-1 mt-3 bg-slate-900 px-5 pb-2 pt-2">
+      <p className="mb-2 text-center text-xs text-slate-400">
         {b === null ? tr('Διάλεξε και την τελευταία ημέρα') : lo === hi ? formatShort(lo) : `${formatShort(lo)} – ${formatShort(hi)}`}
       </p>
-      <div className="sticky bottom-0 -mx-5 -mb-1 mt-3 bg-slate-900 px-5 pb-2 pt-2">
         <button onClick={() => onApply(lo, hi)} className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 py-3.5 font-semibold text-white active:scale-[.98]">{tr('Εφαρμογή')}</button>
       </div>
     </Sheet>
