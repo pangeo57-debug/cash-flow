@@ -1,6 +1,6 @@
 import {
   Apple, Landmark, Bus, Coffee, Dices, Fuel, GraduationCap, HandCoins, ListChecks, PartyPopper, Pill,
-  Plane, Plus, Route, Shuffle, ShoppingBag, ShoppingCart, Utensils, Zap,
+  Plane, Plus, Wrench, Route, Shuffle, ShoppingBag, ShoppingCart, Utensils, Zap,
   type LucideIcon,
 } from 'lucide-react'
 import type { TxType } from './types'
@@ -47,6 +47,7 @@ export const EXPENSE_CATEGORIES: Category[] = [
   cat('Αγορές', 'Αγορές', ShoppingBag, '#c084fc'),
   cat('Διασκέδαση', 'Διασκέδαση', PartyPopper, '#e879f9'),
   cat('Υγεία', 'Υγεία / Φαρμακείο', Pill, '#2dd4bf'),
+  cat('Αυτοκίνητο', 'Αυτοκίνητο / Συνεργείο', Wrench, '#0ea5e9'),
   cat('Κουλουλού', 'Κουλουλού (διάφορα)', Shuffle, '#94a3b8'),
 ]
 

@@ -417,5 +417,14 @@ const dict: Record<string, string> = {
   'Τελευταίες 7 ημέρες': 'Last 7 days',
   'Τελευταίες 30 ημέρες': 'Last 30 days',
   'Διάλεξε και την τελευταία ημέρα': 'Now pick the last day',
+  'Γρήγορη καταγραφή': 'Quick entry',
+  'π.χ. 150 ευρώ ρουλεμάν αυτοκίνητο': 'e.g. 150 euros wheel bearing car',
+  'Πάτα το μικρόφωνο και πες το ποσό και τι αγόρασες, ή γράψε το.': 'Tap the microphone and say the amount and what you bought, or type it.',
+  'Ακούω…': 'Listening…',
+  'Φωνητική καταγραφή': 'Voice entry',
+  'Δεν επιτράπηκε το μικρόφωνο. Δώσε την άδεια στις ρυθμίσεις του browser.': 'Microphone not allowed. Grant permission in the browser settings.',
+  'Η αναγνώριση φωνής δεν δουλεύει εδώ. Πάτα το μικρόφωνο του πληκτρολογίου σου και υπαγόρευσε.': 'Voice recognition does not work here. Tap your keyboard\'s microphone and dictate.',
+  'Δεν βρέθηκε ποσό. Πες π.χ. «150 ευρώ …».': 'No amount found. Say e.g. “150 euros …”.',
+  'Αυτοκίνητο / Συνεργείο': 'Car / Garage',
 }
 export default dict

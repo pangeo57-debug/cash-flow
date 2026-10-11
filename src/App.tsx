@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
-import { BarChart3, CalendarDays, ClipboardPaste, LineChart, CalendarRange, ChevronLeft, SettingsIcon, ChevronRight, Minus, Plus } from 'lucide-react'
+import { BarChart3, CalendarDays, ClipboardPaste, Mic, LineChart, CalendarRange, ChevronLeft, SettingsIcon, ChevronRight, Minus, Plus } from 'lucide-react'
 import { useAppData } from './store'
 import { addDays, formatLong, periodRange, todayISO } from './lib/dates'
 import { BalanceCard } from './components/BalanceCard'
@@ -9,6 +9,7 @@ import { TransactionSheet } from './components/TransactionSheet'
 import { LessonSheet } from './components/LessonSheet'
 import { useTheme } from './theme'
 import { useCloudSync } from './useSync'
+import { QuickAdd } from './components/QuickAdd'
 import { LockScreen } from './components/LockScreen'
 import { loadLock } from './lib/lock'
 import { parseMessage } from './lib/message'
@@ -42,6 +43,7 @@ export default function App() {
   const [lessonSheet, setLessonSheet] = useState<{ lesson?: Lesson } | null>(null)
 
   const [week, setWeek] = useState(() => periodRange('week', todayISO()))
+  const [quickOpen, setQuickOpen] = useState(false)
   const [editTx, setEditTx] = useState<Transaction | null>(null)
   const [recSheet, setRecSheet] = useState<{ item?: RecurringTx } | null>(null)
   const [slotSheet, setSlotSheet] = useState<{ slot?: WeeklySlot } | null>(null)
@@ -226,9 +228,14 @@ export default function App() {
           <div className="mx-auto flex max-w-lg justify-between lg:max-w-5xl lg:justify-end lg:gap-3">
             <button onClick={() => setTxSheet('expense')} className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-rose-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-rose-950/40 active:scale-95">
               <Minus size={18} /> {tr('Έξοδο')}</button>
-            <button onClick={() => void pasteFromClipboard()} aria-label={tr('Καταγραφή από αντιγραμμένο μήνυμα')} className="pointer-events-auto flex h-12 w-12 items-center justify-center self-center rounded-full bg-indigo-500 text-white shadow-lg active:scale-95 lg:order-first">
+            <div className="flex items-center gap-2 self-center lg:order-first">
+              <button onClick={() => setQuickOpen(true)} aria-label={tr('Φωνητική καταγραφή')} className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-violet-500 text-white shadow-lg active:scale-95">
+                <Mic size={20} />
+              </button>
+            <button onClick={() => void pasteFromClipboard()} aria-label={tr('Καταγραφή από αντιγραμμένο μήνυμα')} className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500 text-white shadow-lg active:scale-95">
               <ClipboardPaste size={20} />
             </button>
+            </div>
             <button onClick={() => setTxSheet('income')} className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-emerald-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-emerald-950/40 active:scale-95">
               <Plus size={18} /> {tr('Έσοδο')}</button>
           </div>
@@ -248,6 +255,13 @@ export default function App() {
         <div className="pointer-events-none fixed inset-x-0 top-3 z-50 flex justify-center px-4" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-fg shadow-lg ring-1 ring-fg/10">{toast}</div>
         </div>
+      )}
+      {quickOpen && (
+        <QuickAdd
+          learned={data.settings.merchantRules}
+          onClose={() => setQuickOpen(false)}
+          onSave={(v) => { addTransaction({ ...v, date }); setQuickOpen(false); setToast(`${v.type === 'income' ? '+' : '−'}${v.amount.toFixed(2).replace('.', ',')} € · ${v.note || ''}`) }}
+        />
       )}
       {editTx && (
         <TransactionSheet
