@@ -103,6 +103,7 @@ const dict: Record<string, string> = {
   'Αμοιβή': 'Tarif',
   'Διάρκεια': 'Durée',
   'λεπτά': 'minutes',
+  'Διάλεξε κατηγορία': 'Choisis une catégorie',
   'Αποθήκευση': 'Enregistrer',
   'Διαγραφή μαθήματος': 'Supprimer le cours',
   'Πολλές αποτυχίες. Περίμενε {0}″': 'Trop d\'échecs. Attends {0}″',

@@ -13,12 +13,12 @@ interface Props {
 
 export function TransactionSheet({ type, initial, onSave, onClose }: Props) {
   const cats = categoriesFor(type)
-  const [category, setCategory] = useState(initial?.category ?? cats[0].id)
+  const [category, setCategory] = useState(initial?.category ?? '') // no silent default: the user picks the category
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '')
   const [note, setNote] = useState(initial?.note ?? '')
   const isIncome = type === 'income'
   const value = parseFloat(amount.replace(',', '.'))
-  const valid = Number.isFinite(value) && value > 0
+  const valid = Number.isFinite(value) && value > 0 && category !== ''
 
   return (
     <Sheet title={initial ? (isIncome ? tr('Επεξεργασία εσόδου') : tr('Επεξεργασία εξόδου')) : isIncome ? tr('Νέο έσοδο') : tr('Νέο έξοδο')} onClose={onClose}>
@@ -60,11 +60,14 @@ export function TransactionSheet({ type, initial, onSave, onClose }: Props) {
         className="mb-4 w-full rounded-2xl bg-slate-800 px-4 py-3 outline-none ring-2 ring-transparent placeholder:text-slate-500 focus:ring-indigo-500"
       />
 
+      <div className="sticky bottom-0 -mx-5 -mb-1 bg-slate-900 px-5 pb-2 pt-2">
+      {category === '' && <p className="mb-2 text-center text-xs text-amber-300">{tr('Διάλεξε κατηγορία')}</p>}
       <button
         disabled={!valid}
         onClick={() => onSave({ category, amount: Math.round(value * 100) / 100, note: note.trim() })}
         className={`w-full rounded-2xl py-3.5 text-base font-semibold text-fg transition active:scale-[.98] disabled:opacity-40 ${isIncome ? 'bg-emerald-500' : 'bg-rose-500'}`}
       >{tr('Αποθήκευση')}</button>
+      </div>
     </Sheet>
   )
 }
