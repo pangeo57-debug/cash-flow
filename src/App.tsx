@@ -242,7 +242,7 @@ export default function App() {
         </div>
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-lg grid-cols-5 border-t border-fg/10 bg-slate-950/95 safe-b lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-lg grid-cols-5 border-t border-fg/10 bg-slate-950 safe-b lg:hidden">
         {tabs().map(([id, label, Icon]) => (
           <button key={id} onClick={() => setTab(id)} className={`flex flex-col items-center gap-0.5 pt-2.5 text-[11px] ${tab === id ? 'text-indigo-400' : 'text-slate-500'}`}>
             <Icon size={22} />

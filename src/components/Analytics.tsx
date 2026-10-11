@@ -86,6 +86,8 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
   return (
     <div className="space-y-5">
+      <RangePicker from={from} to={to} onChange={(f, t) => { setCat(null); setCustom({ from: f, to: t }); setPeriod('custom') }} />
+
       <div className="grid grid-cols-5 gap-1 rounded-2xl bg-slate-800 p-1">
         {(Object.keys(periodLabels()) as Period[]).map((p) => (
           <button key={p} onClick={() => changePeriod(p)} className={`rounded-xl px-1 py-2 text-[11px] font-medium transition ${p === period ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>
@@ -93,8 +95,6 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
           </button>
         ))}
       </div>
-
-      <RangePicker from={from} to={to} onChange={(f, t) => { setCat(null); setCustom({ from: f, to: t }); setPeriod('custom') }} />
 
       <div className="flex items-center justify-between">
         <button onClick={() => move(-1)} aria-label={tr('Προηγούμενη')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronLeft size={18} /></button>
