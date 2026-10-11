@@ -102,7 +102,7 @@ function Calendar({ from, to, maxDays, onClose, onApply }: { from: string; to: s
       <p className="mt-3 text-center text-xs text-slate-400">
         {b === null ? tr('Διάλεξε και την τελευταία ημέρα') : lo === hi ? formatShort(lo) : `${formatShort(lo)} – ${formatShort(hi)}`}
       </p>
-      <div className="sticky bottom-0 -mx-5 mt-3 bg-slate-900 px-5 pb-1 pt-2">
+      <div className="sticky bottom-0 -mx-5 -mb-1 mt-3 bg-slate-900 px-5 pb-2 pt-2">
         <button onClick={() => onApply(lo, hi)} className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 py-3.5 font-semibold text-white active:scale-[.98]">{tr('Εφαρμογή')}</button>
       </div>
     </Sheet>

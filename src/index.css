@@ -46,7 +46,7 @@ input, select, textarea, button { font: inherit; }
 input, select, textarea { font-size: 16px; }
 main { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
-.safe-b { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+.safe-b { padding-bottom: max(1.25rem, env(safe-area-inset-bottom)); }
 .safe-t { padding-top: max(1rem, env(safe-area-inset-top)); }
 @layer components {
   .fab-row { bottom: calc(4.75rem + env(safe-area-inset-bottom)); }
