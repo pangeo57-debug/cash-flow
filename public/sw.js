@@ -1,4 +1,4 @@
-const CACHE = 'cashflow-v4'
+const CACHE = 'cashflow-v5'
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './manifest.webmanifest', './icon-192.png'])))
@@ -26,9 +26,11 @@ self.addEventListener('fetch', (e) => {
         })
       if (isPage) {
         const fallback = cached || (await cache.match('./'))
-        return Promise.race([fresh(), new Promise((r) => setTimeout(() => r(fallback), 3000))]).then((r) => r || fresh()).catch(() => fallback)
+        if (!fallback) return fresh()
+        const timeout = new Promise((r) => setTimeout(() => r(fallback), 3000))
+        return Promise.race([fresh().catch(() => fallback), timeout])
       }
-      return cached || fresh()
+      return cached || fresh().catch(() => cached || Response.error())
     }),
   )
 })
