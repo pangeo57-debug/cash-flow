@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: { slate, fg: v('fg'), page: v('page') },
-      fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', 'Inter', 'system-ui', 'sans-serif'] },
+      fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', 'system-ui', 'sans-serif'] },
     },
   },
   plugins: [],

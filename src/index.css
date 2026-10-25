@@ -36,6 +36,10 @@ body {
   color: rgb(var(--slate-200));
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv11", "ss01";
   overscroll-behavior-y: none;
 }
 /* instant taps (no 300ms delay / double-tap zoom), no accidental text selection on controls */
