@@ -383,7 +383,7 @@ export function Settings({ data, onSettings, onAdd, onEdit, onImport, onImportIn
             {REGIONS.map((r) => <option key={r.id} value={r.id}>{tr(r.label)}</option>)}
           </select>
         </label>
-        <label className="flex items-center justify-between gap-3 text-sm text-slate-200">{tr('Να μην δημιουργούνται πάγια μαθήματα τις αργίες')}<input type="checkbox" checked={skipHolidays} onChange={(e) => onSettings({ skipHolidays: e.target.checked })} className="h-5 w-5 accent-indigo-500" />
+        <label className="flex items-center justify-between gap-3 text-sm text-slate-200">{tr('Να μην δημιουργούνται πάγια ραντεβού τις αργίες')}<input type="checkbox" checked={skipHolidays} onChange={(e) => onSettings({ skipHolidays: e.target.checked })} className="h-5 w-5 accent-indigo-500" />
         </label>
         <div>
           <p className="mb-1.5 text-xs text-slate-400">{tr('Επόμενες αργίες')}</p>

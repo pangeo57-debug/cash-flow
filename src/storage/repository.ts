@@ -75,7 +75,7 @@ export function validateBackup(parsed: unknown): AppData {
   }
   const checks: [string, unknown, (v: unknown) => boolean][] = [
     [tr('συναλλαγές'), parsed.transactions, transaction],
-    [tr('μαθήματα'), parsed.lessons, lesson],
+    [tr('ραντεβού'), parsed.lessons, lesson],
     [tr('εβδομαδιαίο πρόγραμμα'), parsed.weeklySlots, slot],
     [tr('επαναλαμβανόμενες κινήσεις'), parsed.recurring, recurring],
   ]

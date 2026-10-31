@@ -1,5 +1,5 @@
 import {
-  Apple, Landmark, Bus, Coffee, Dices, Fuel, GraduationCap, HandCoins, ListChecks, PartyPopper, Pill,
+  Apple, Landmark, Bus, Coffee, Dices, Fuel, CalendarCheck, HandCoins, ListChecks, PartyPopper, Pill,
   Plane, Plus, Wrench, Route, Shuffle, ShoppingBag, ShoppingCart, Utensils, Zap,
   type LucideIcon,
 } from 'lucide-react'
@@ -23,10 +23,10 @@ const cat = (id: string, label: string, icon: LucideIcon, color: string): Catego
   color,
 })
 
-export const LESSON_CATEGORY = 'Μάθημα'
+export const LESSON_CATEGORY = 'Μάθημα' // stored id (kept for existing data); shown as «Ραντεβού»
 
 export const INCOME_CATEGORIES: Category[] = [
-  cat('Μάθημα', 'Μάθημα', GraduationCap, '#34d399'),
+  cat('Μάθημα', 'Ραντεβού', CalendarCheck, '#34d399'),
   cat('Tips', 'Tips / Φιλοδώρημα', HandCoins, '#2dd4bf'),
   cat('Τζόγος', 'Τζόγος / Στοίχημα', Dices, '#a3e635'),
   cat('Επίδομα', 'Ταμείο ανεργίας / Επίδομα', Landmark, '#60a5fa'),

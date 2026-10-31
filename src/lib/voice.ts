@@ -21,7 +21,7 @@ const LEAD_WORDS = new Set('ΞΟΔΕΨΑ ΠΛΗΡΩΣΑ ΕΔΩΣΑ ΕΒΑΛΑ Γ
 const CATEGORY_HINTS: [string, string[]][] = [
   ['Tips', ['TIP', 'ΦΙΛΟΔΩΡΗΜΑ', 'ΤΙΠ', 'TRINKGELD', 'POURBOIRE', 'MANCIA']],
   ['Επίδομα', ['ΕΠΙΔΟΜΑ', 'ΤΑΜΕΙΟ ΑΝΕΡΓΙΑΣ', 'ΔΥΠΑ', 'BENEFIT', 'ARBEITSLOSENGELD', 'ALLOCATION', 'SUSSIDIO']],
-  ['Μάθημα', ['ΜΑΘΗΜΑ', 'LESSON', 'STUNDE', 'COURS', 'LEZIONE']],
+  ['Μάθημα', ['ΡΑΝΤΕΒΟΥ', 'ΜΑΘΗΜΑ', 'APPOINTMENT', 'LESSON', 'TERMIN', 'STUNDE', 'RENDEZ', 'COURS', 'APPUNTAMENTO', 'LEZIONE']],
 ]
 
 /** "150 ευρώ ρουλεμάν αυτοκίνητο" → expense 150, note "ρουλεμάν αυτοκίνητο", category guessed from the words. */

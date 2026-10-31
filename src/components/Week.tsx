@@ -38,7 +38,7 @@ export function Week({ from, to, setRange, lessons, slots, onOpenDay, onAddSlot,
         <button onClick={() => setRange(addDays(from, -span), addDays(to, -span))} aria-label={tr('Προηγούμενη εβδομάδα')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronLeft size={18} /></button>
         <button onClick={() => setRange(calendarWeek.from, calendarWeek.to)} className="text-center">
           <p className="text-base font-semibold text-fg">{formatShort(from)} – {formatShort(to)}</p>
-          <p className="text-xs text-slate-400">{tr('{0} μαθήματα · {1} / {2}', weekLessons.length, money(paid), money(expected))}</p>
+          <p className="text-xs text-slate-400">{tr('{0} ραντεβού · {1} / {2}', weekLessons.length, money(paid), money(expected))}</p>
         </button>
         <button onClick={() => setRange(addDays(from, span), addDays(to, span))} aria-label={tr('Επόμενη εβδομάδα')} className="rounded-full bg-slate-800 p-2 active:scale-95"><ChevronRight size={18} /></button>
       </header>
@@ -104,12 +104,12 @@ export function Week({ from, to, setRange, lessons, slots, onOpenDay, onAddSlot,
         </div>
         {oneOffs > 0 && (
           <button
-            onClick={() => { if (window.confirm(tr('Να γίνουν πάγια (κάθε εβδομάδα) τα {0} μαθήματα αυτής της εβδομάδας;', oneOffs))) onSaveWeek(from, to) }}
+            onClick={() => { if (window.confirm(tr('Να γίνουν πάγια (κάθε εβδομάδα) τα {0} ραντεβού αυτής της εβδομάδας;', oneOffs))) onSaveWeek(from, to) }}
             className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 py-3 text-sm font-semibold text-white active:scale-[.98]"
           >
             <Repeat size={16} /> {tr('Αποθήκευση αυτής της εβδομάδας ως πάγιο ({0})', oneOffs)}</button>
         )}
-        {slots.length === 0 && <p className="rounded-2xl border border-dashed border-fg/10 py-6 text-center text-sm text-slate-500">{tr('Πρόσθεσε μαθήματα που γίνονται κάθε εβδομάδα και θα εμφανίζονται μόνα τους.')}</p>}
+        {slots.length === 0 && <p className="rounded-2xl border border-dashed border-fg/10 py-6 text-center text-sm text-slate-500">{tr('Πρόσθεσε ραντεβού που γίνονται κάθε εβδομάδα και θα εμφανίζονται μόνα τους.')}</p>}
         <ul className="space-y-2">
           {[...slots].sort((a, b) => a.weekday - b.weekday || a.time.localeCompare(b.time)).map((s) => (
             <li key={s.id} className="flex items-center gap-3 rounded-2xl bg-slate-800/70 p-3">
