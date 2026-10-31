@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Cloud, CalendarHeart, ShieldCheck, FileSpreadsheet, Gauge, X, Palette, Smartphone, Target, ClipboardPaste, Copy, Download, Pencil, Plus, Repeat } from 'lucide-react'
+import { Cloud, CalendarHeart, ShieldCheck, FileSpreadsheet, Gauge, X, Palette, Smartphone, Target, ClipboardPaste, Copy, Download, Pencil, Plus, Repeat, Trash2 } from 'lucide-react'
 import type { ThemePref } from '../theme'
 import { validateBackup } from '../storage/repository'
 import type { SyncState } from '../useSync'
@@ -330,6 +330,35 @@ function Backup({ data, onImport }: { data: AppData; onImport: (d: AppData) => P
   )
 }
 
+// Privacy & data: the policy, and a way to erase everything this app keeps on the device.
+function PrivacyData() {
+  const [armed, setArmed] = useState(false)
+  const wipe = () => {
+    try {
+      Object.keys(localStorage).filter((k) => k.startsWith('cashflow:') || k.startsWith('tutor-cashflow:')).forEach((k) => localStorage.removeItem(k))
+    } catch { /* storage blocked: nothing to remove */ }
+    location.reload()
+  }
+  return (
+    <section className="space-y-3 rounded-3xl bg-slate-800/70 p-4">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-fg"><ShieldCheck size={16} className="text-indigo-300" /> {tr('Απόρρητο & δεδομένα')}</h2>
+      <p className="text-xs text-slate-400">{tr('Τα δεδομένα σου μένουν σε αυτή τη συσκευή. Δεν υπάρχουν διαφημίσεις ούτε στατιστικά παρακολούθησης.')}</p>
+      <a href="./privacy.html" target="_blank" rel="noopener" className="inline-block text-sm text-indigo-300 underline">{tr('Πολιτική απορρήτου')}</a>
+      {!armed ? (
+        <button onClick={() => setArmed(true)} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-400/40 py-3 text-sm font-semibold text-rose-300 active:scale-[.98]"><Trash2 size={16} /> {tr('Διαγραφή όλων των δεδομένων')}</button>
+      ) : (
+        <div className="space-y-2 rounded-2xl border border-rose-400/40 p-3">
+          <p className="text-xs text-rose-200">{tr('Θα σβηστούν όλες οι κινήσεις, τα ραντεβού, οι ρυθμίσεις και το PIN από αυτή τη συσκευή. Δεν αναιρείται. Αν χρησιμοποιείς συγχρονισμό, σβήσε και τα δεδομένα στη δική σου βάση Supabase.')}</p>
+          <div className="flex gap-2">
+            <button onClick={() => setArmed(false)} className="flex-1 rounded-2xl bg-fg/5 py-2.5 text-sm text-slate-300">{tr('Άκυρο')}</button>
+            <button onClick={wipe} className="flex-1 rounded-2xl bg-rose-500 py-2.5 text-sm font-semibold text-white">{tr('Οριστική διαγραφή')}</button>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
 export function Settings({ data, onSettings, onAdd, onEdit, onImport, onImportInbox, onSync, onPasteMessage, sync, onSyncNow, theme, onTheme }: Props) {
   const lang = useLang()
   const { region, skipHolidays } = data.settings
@@ -425,6 +454,7 @@ export function Settings({ data, onSettings, onAdd, onEdit, onImport, onImportIn
       <CloudSync onSync={onSync} sync={sync} onSyncNow={onSyncNow} />
       <AutoCapture onImportInbox={onImportInbox} />
       <Backup data={data} onImport={onImport} />
+      <PrivacyData />
       </div>
       <p className="text-center text-[11px] text-slate-500">Cash Flow · {__APP_VERSION__}</p>
     </div>

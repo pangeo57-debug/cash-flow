@@ -427,5 +427,12 @@ const dict: Record<string, string> = {
   'Η αναγνώριση φωνής δεν δουλεύει εδώ. Πάτα το μικρόφωνο του πληκτρολογίου σου και υπαγόρευσε.': 'Voice recognition does not work here. Tap your keyboard\'s microphone and dictate.',
   'Δεν βρέθηκε ποσό. Πες π.χ. «150 ευρώ …».': 'No amount found. Say e.g. “150 euros …”.',
   'Αυτοκίνητο / Συνεργείο': 'Car / Garage',
+  'Απόρρητο & δεδομένα': 'Privacy & data',
+  'Τα δεδομένα σου μένουν σε αυτή τη συσκευή. Δεν υπάρχουν διαφημίσεις ούτε στατιστικά παρακολούθησης.': 'Your data stays on this device. There are no ads and no tracking analytics.',
+  'Πολιτική απορρήτου': 'Privacy policy',
+  'Διαγραφή όλων των δεδομένων': 'Delete all data',
+  'Θα σβηστούν όλες οι κινήσεις, τα ραντεβού, οι ρυθμίσεις και το PIN από αυτή τη συσκευή. Δεν αναιρείται. Αν χρησιμοποιείς συγχρονισμό, σβήσε και τα δεδομένα στη δική σου βάση Supabase.': 'This erases every transaction, appointment, setting and the PIN from this device. It cannot be undone. If you use sync, also delete the data in your own Supabase database.',
+  'Άκυρο': 'Cancel',
+  'Οριστική διαγραφή': 'Delete permanently',
 }
 export default dict
