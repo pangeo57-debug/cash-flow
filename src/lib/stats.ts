@@ -177,7 +177,7 @@ export function buildInsights(s: Summary): Insight[] {
     const p = pct(transport, s.income)
     out.push({
       tone: p >= 15 ? 'warn' : 'info',
-      text: tr('Τα καύσιμα/διόδια/μετακινήσεις απορροφούν το {0}% των εσόδων σου ({1}).{2}', p, money(transport), p >= 15 ? tr(' Δοκίμασε να ομαδοποιείς μαθήματα στην ίδια περιοχή.') : ''),
+      text: tr('Τα καύσιμα/διόδια/μετακινήσεις απορροφούν το {0}% των εσόδων σου ({1}).{2}', p, money(transport), p >= 15 ? tr(' Δοκίμασε να ομαδοποιείς ραντεβού στην ίδια περιοχή.') : ''),
     })
   }
 
@@ -192,7 +192,7 @@ export function buildInsights(s: Summary): Insight[] {
   }
 
   if (s.lostIncome > 0) {
-    out.push({ tone: 'warn', text: tr('{0} ακυρωμένα μαθήματα = {1} χαμένα έσοδα.', s.cancelledCount, money(s.lostIncome)) })
+    out.push({ tone: 'warn', text: tr('{0} ακυρωμένα ραντεβού = {1} χαμένα έσοδα.', s.cancelledCount, money(s.lostIncome)) })
   }
 
   if (s.income > 0) {

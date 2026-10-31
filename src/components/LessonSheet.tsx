@@ -25,9 +25,9 @@ export function LessonSheet({ lesson, date, defaultFee, onSave, onDelete, onClos
   const field = 'w-full rounded-2xl bg-slate-800 px-4 py-3 outline-none ring-2 ring-transparent focus:ring-indigo-500 placeholder:text-slate-500'
 
   return (
-    <Sheet title={lesson ? tr('Επεξεργασία μαθήματος') : tr('Νέο μάθημα')} onClose={onClose}>
+    <Sheet title={lesson ? tr('Επεξεργασία ραντεβού') : tr('Νέο ραντεβού')} onClose={onClose}>
       <div className="space-y-3">
-        <input autoFocus placeholder={tr('Μαθητής / Τμήμα')} value={student} onChange={(e) => setStudent(e.target.value)} className={field} />
+        <input autoFocus placeholder={tr('Τίτλος')} value={student} onChange={(e) => setStudent(e.target.value)} className={field} />
         <div className="grid grid-cols-2 gap-3">
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className={field} />
           <input type="date" value={day} onChange={(e) => setDay(e.target.value)} className={field} />
@@ -49,7 +49,7 @@ export function LessonSheet({ lesson, date, defaultFee, onSave, onDelete, onClos
         >{tr('Αποθήκευση')}</button>
         {onDelete && (
           <button onClick={onDelete} className="flex w-full items-center justify-center gap-2 py-2 text-sm text-rose-400">
-            <Trash2 size={16} /> {tr('Διαγραφή μαθήματος')}</button>
+            <Trash2 size={16} /> {tr('Διαγραφή ραντεβού')}</button>
         )}
       </div>
     </Sheet>

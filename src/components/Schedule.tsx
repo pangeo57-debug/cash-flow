@@ -17,11 +17,11 @@ export function Schedule({ lessons, onAdd, onEdit, onStatus }: Props) {
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-base font-semibold text-fg">{tr('Πρόγραμμα')}</h2>
         <button onClick={onAdd} className="flex items-center gap-1 rounded-full bg-indigo-500/20 px-3 py-1.5 text-sm text-indigo-300 active:scale-95">
-          <Plus size={16} /> {tr('Έξτρα μάθημα')}</button>
+          <Plus size={16} /> {tr('Έξτρα ραντεβού')}</button>
       </div>
 
       {sorted.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-fg/10 py-6 text-center text-sm text-slate-500">{tr('Κανένα μάθημα σήμερα')}</p>
+        <p className="rounded-2xl border border-dashed border-fg/10 py-6 text-center text-sm text-slate-500">{tr('Κανένα ραντεβού σήμερα')}</p>
       )}
 
       <ol className="relative space-y-3 border-l border-fg/10 pl-4">

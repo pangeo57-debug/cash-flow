@@ -29,7 +29,7 @@ export function BalanceCard({ income, expense, lessonsDone, lessonsTotal, pendin
       {lessonsTotal > 0 && (
         <div className="mt-3">
           <div className="mb-1 flex justify-between text-xs text-indigo-100/80">
-            <span>{tr('Μαθήματα {0}/{1}', lessonsDone, lessonsTotal)}</span>
+            <span>{tr('Ραντεβού {0}/{1}', lessonsDone, lessonsTotal)}</span>
             <span>{pending > 0 ? tr('Εκκρεμούν {0}', money(pending)) : tr('Όλα πληρώθηκαν ✓')}</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-black/25">

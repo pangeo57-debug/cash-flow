@@ -141,7 +141,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
           <div className="my-1 border-t border-fg/10" />
           <Row label={tr('Έμειναν (καθαρό)')} value={money(s.net)} cls={s.net >= 0 ? 'text-fg font-bold' : 'text-rose-400 font-bold'} delta={delta(s.net, prev.net, true)} />
           <Row label={tr('Χαμένα από ακυρώσεις ({0})', s.cancelledCount)} value={money(s.lostIncome)} cls="text-amber-400" />
-          <Row label={tr('Ολοκληρωμένα μαθήματα')} value={String(s.doneCount)} cls="text-slate-300" />
+          <Row label={tr('Ολοκληρωμένα ραντεβού')} value={String(s.doneCount)} cls="text-slate-300" />
         </dl>
         <p className="mt-3 text-[11px] text-slate-500">{tr('Σύγκριση με {0}{1}', formatShort(prevRange.from), prevRange.from !== prevRange.to ? ` – ${formatShort(prevRange.to)}` : '')}</p>
       </div>
@@ -242,7 +242,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
       {s.lessonWeekday.some((d) => d.income > 0) && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
           <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-fg"><Clock size={16} className="text-indigo-300" /> {tr('Πιο προσοδοφόρες μέρες και ώρες')}</h3>
-          <p className="mb-2 text-[11px] text-slate-500">{tr('Έσοδα από ολοκληρωμένα μαθήματα στην περίοδο.')}</p>
+          <p className="mb-2 text-[11px] text-slate-500">{tr('Έσοδα από ολοκληρωμένα ραντεβού στην περίοδο.')}</p>
           <div className="h-36">
             <ResponsiveContainer>
               <BarChart data={s.lessonWeekday} margin={{ left: -20, right: 4 }}>
@@ -274,7 +274,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
       {s.byStudent.length > 0 && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Users size={16} className="text-indigo-300" /> {tr('Ανά μαθητή')}</h3>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Users size={16} className="text-indigo-300" /> {tr('Ανά δραστηριότητα')}</h3>
           <ul className="space-y-3">
             {s.byStudent.map((st) => (
               <li key={st.name}>
@@ -286,7 +286,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
                   <div className="h-full rounded-full bg-emerald-400" style={{ width: `${(st.income / (s.byStudent[0].income || 1)) * 100}%` }} />
                 </div>
                 <p className="mt-1 flex flex-wrap gap-x-3 text-[11px] text-slate-400">
-                  <span>{tr('{0} μαθ.', st.done)}</span>
+                  <span>{tr('{0} φορές', st.done)}</span>
                   {st.done > 0 && <span>{tr('μ.ο. {0}', money(st.avg))}</span>}
                   {st.cancelled > 0 && <span className="text-amber-400">{st.cancelled} {st.cancelled === 1 ? tr('ακύρωση') : tr('ακυρώσεις')} ({st.cancelRate}%) · −{money(st.lost)}</span>}
                 </p>
@@ -298,7 +298,7 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
 
       {s.doneCount > 0 && (
         <div className="rounded-3xl bg-slate-800/70 p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Fuel size={16} className="text-indigo-300" /> {tr('Απόδοση μαθημάτων')}</h3>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg"><Fuel size={16} className="text-indigo-300" /> {tr('Απόδοση ραντεβού')}</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl bg-slate-900 p-3">
               <p className="text-[11px] text-slate-400">{tr('Έσοδα / ώρα')}</p>
@@ -309,15 +309,15 @@ export function Analytics({ data, anchor: initialAnchor, isLight }: { data: AppD
               <p className="text-lg font-bold text-emerald-400">{money(s.transport.netPerHour)}</p>
             </div>
             <div className="rounded-2xl bg-slate-900 p-3">
-              <p className="text-[11px] text-slate-400">{tr('Μετακίνηση / μάθημα')}</p>
+              <p className="text-[11px] text-slate-400">{tr('Μετακίνηση / ραντεβού')}</p>
               <p className="text-lg font-bold text-rose-400">{money(s.transport.perLesson)}</p>
             </div>
             <div className="rounded-2xl bg-slate-900 p-3">
-              <p className="text-[11px] text-slate-400">{tr('Καθαρό / μάθημα')}</p>
+              <p className="text-[11px] text-slate-400">{tr('Καθαρό / ραντεβού')}</p>
               <p className="text-lg font-bold text-emerald-400">{money(s.transport.netPerLesson)}</p>
             </div>
           </div>
-          <p className="mt-2 text-[11px] text-slate-400">{tr('{0} μαθήματα · {1} ώρες. Μετακίνηση = βενζίνη + διόδια + μετακινήσεις ({2}, {3}% των εσόδων από μαθήματα). Μαθήματα χωρίς διάρκεια μετράνε 60 λεπτά.', s.doneCount, s.transport.hours.toFixed(1), money(s.transport.total), s.transport.share)}</p>
+          <p className="mt-2 text-[11px] text-slate-400">{tr('{0} ραντεβού · {1} ώρες. Μετακίνηση = βενζίνη + διόδια + μετακινήσεις ({2}, {3}% των εσόδων από ραντεβού). Ραντεβού χωρίς διάρκεια μετράνε 60 λεπτά.', s.doneCount, s.transport.hours.toFixed(1), money(s.transport.total), s.transport.share)}</p>
         </div>
       )}
 
@@ -492,7 +492,7 @@ function GoalCard({ f, goal }: { f: ReturnType<typeof monthForecast>; goal: numb
             <div className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-emerald-400' : 'bg-gradient-to-r from-indigo-500 to-violet-500'}`} style={{ width: `${pct}%` }} />
           </div>
           <p className="mt-2 text-sm text-slate-300">
-            {missing === 0 ? tr('Ο στόχος επιτεύχθηκε 🎉') : <>{tr('Χρειάζεσαι ακόμα')} <b className="text-fg">{money(missing)}</b> {tr('(~{0} μαθήματα).', lessonsNeeded)}</>}
+            {missing === 0 ? tr('Ο στόχος επιτεύχθηκε 🎉') : <>{tr('Χρειάζεσαι ακόμα')} <b className="text-fg">{money(missing)}</b> {tr('(~{0} ραντεβού).', lessonsNeeded)}</>}
           </p>
         </>
       ) : (
